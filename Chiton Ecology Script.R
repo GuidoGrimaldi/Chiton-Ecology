@@ -7,9 +7,14 @@
 
 # Setting ####
 R.utils::getRelativePath(getwd())
-
 usethis::create_project("~/Documentos/R sessions/Chiton Ecology")
 
+usethis::use_git() # 2 "Yeah" / 3 "Yes"
+
+
+gitcreds::gitcreds_set()
+
+usethis::use_github()
 
 
 setwd("C:\\Users\\guido\\Documentos\\Git\\2023_Ecology_chitons")
@@ -47,7 +52,7 @@ vif(data)
 
 data <- read.csv("chitons.eco.data.csv", sep=";",dec=".", header=T)
 head(data)
-dim(data) 
+dim(data)
 str(data)
 data$fSite <- factor(data$Site)
 dim(data)
@@ -68,7 +73,7 @@ dim(data)
 # + "Cov.DeathCCAPey" -> % cobertura de alga CCA e Pey morta.
 # + "Cov.Others" -> % cobertura de outros substratos (rocha nua, "mucos", other)
 # + "Cov.Asci" -> % cobertura de Ascidias
-# + "Cov.Bryo" -> % cobertura de Briozoarios 
+# + "Cov.Bryo" -> % cobertura de Briozoarios
 # + "Cov.Spon" -> % cobertura de Esponjas.
 
 # Data Exploring ####
@@ -76,16 +81,16 @@ dim(data)
 # 1. Amostragem balanceadas ?
 tapply(data$Chiton_F,data$fSite,length) # YES
 
-# 2. Missing data ? 
+# 2. Missing data ?
 summary(data) # NO
 
-# 3. Zero trouble Y ? 
+# 3. Zero trouble Y ?
 table(data$Chiton_F)
 plot(table(data$Chiton_F))
-barplot(table(data$Chiton_F)) # Bastante zeros! 
+barplot(table(data$Chiton_F)) # Bastante zeros!
 
 # Podemos saber a proporcao de zeros aplicando o seguinte calculo:
-sum(data$Chiton_F==0)/length(data$Chiton_F)*100 
+sum(data$Chiton_F==0)/length(data$Chiton_F)*100
 
 # Proporcao dos dados que sao iguais a zero eh 63.33%
 
@@ -99,7 +104,7 @@ lines(density(data$Chiton_F), col="blue")
 
 # 4. Normality Y ?
 
-# Qual seria a distribuicao normal teorica a partir da media e desvio padrao da 
+# Qual seria a distribuicao normal teorica a partir da media e desvio padrao da
 # abundancia observada ?
 curve(dnorm(x, mean=mean(data$Chiton_F), sd=sd(data$Chiton_F)), add=T, col="red")
 
@@ -129,7 +134,7 @@ qqPlot(data$Chiton_F, distribution="pois", lambda=mean(data$Chiton_F))
 # A hipotese nula testada eh de que os dados da variavel possuem uma distribuicao
 # normal.
 # Dessa forma, um p significativo (< 0.05) indicara uma rejeicao da hipotese nula,
-# aceitando-se a hipotese alternativa de nao normalidade dos dados. 
+# aceitando-se a hipotese alternativa de nao normalidade dos dados.
 
 # Vejamos:
 shapiro.test(data$Chiton_F) # NAO NORMAL
@@ -238,16 +243,16 @@ beeswarm::beeswarm(Cov.Spong ~ Site,data=data, col="red", pch=16, method="swarm"
 beeswarm::beeswarm(Cov.Bryo ~ Site,data=data, col="red", pch=16, method="swarm")
 
 
-stripchart(Weight ~ Site,data=data, method="stack") 
-stripchart(Temp ~ Site,data=data, method="stack") 
+stripchart(Weight ~ Site,data=data, method="stack")
+stripchart(Temp ~ Site,data=data, method="stack")
 stripchart(Wt.level ~ Site,data=data, method="stack")
-stripchart(Expo.area ~ Site,data=data, method="stack") 
-stripchart(Samp.time ~ Site,data=data, method="stack") 
-stripchart(Cov.Flu ~ Site,data=data, method="stack") 
-stripchart(Cov.DeathCCAPey ~ Site,data=data, method="stack") 
-stripchart(Cov.Asc ~ Site,data=data, method="stack") 
-stripchart(Cov.Spong ~ Site,data=data, method="stack") 
-stripchart(Cov.Bryo ~ Site,data=data, method="stack") 
+stripchart(Expo.area ~ Site,data=data, method="stack")
+stripchart(Samp.time ~ Site,data=data, method="stack")
+stripchart(Cov.Flu ~ Site,data=data, method="stack")
+stripchart(Cov.DeathCCAPey ~ Site,data=data, method="stack")
+stripchart(Cov.Asc ~ Site,data=data, method="stack")
+stripchart(Cov.Spong ~ Site,data=data, method="stack")
+stripchart(Cov.Bryo ~ Site,data=data, method="stack")
 
 # Podemos observar a dispersao dos dados para cada praia
 # Ou com a funcao do pacote 'lattice' conseguimos ver a dispersao por praia
@@ -273,7 +278,7 @@ xyplot(Chiton_F ~ Cov.Bryo | Site, data=data, type=c("p","r"))
 variancia <- tapply(data$Chiton_F,data$fSite,var)
 variancia
 
-# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a 
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
 # menor variancia:
 
 variancia [2]/ variancia [1]
@@ -285,7 +290,7 @@ variancia [2]/ variancia [1]
 # Para testar a hipotese nula (H0) de igualdade das variancias foram propostos
 # alguns testes, chamados de Testes de Homocedasticidade das variancias. Um deles
 # eh o Teste de Bartlett, um dos mais usados, mas que tende a mascarar diferencas
-# que existem quando a curtose eh negativa, e encontrar diferencas que nao 
+# que existem quando a curtose eh negativa, e encontrar diferencas que nao
 # existem quando a curtose eh positiva.
 
 # Teste de Bartlett:
@@ -304,10 +309,10 @@ bartlett.test(data$Chiton_F ~ data$fSite)
 # Teste de Fligner-Killeen:
 fligner.test(data$Chiton_F ~ data$fSite)
 
-# Rejeitamos a H0 com o Teste de Fligner-Killen. Ou seja as variancias sao 
+# Rejeitamos a H0 com o Teste de Fligner-Killen. Ou seja as variancias sao
 # heterocedasticas.
 
-# Outro teste sugerido nos livros de estatistica eh o Teste de Levene como 
+# Outro teste sugerido nos livros de estatistica eh o Teste de Levene como
 # substituto ao Teste de Bartlett.
 
 # No R, para usarmos o Teste de Levene precisamos instalar o pacote 'car'.
@@ -497,7 +502,7 @@ cor.test(data$Temp, data$Cov.Spong, method= "spearman") # Significante
 plot(data$Temp, data$Cov.Spong)
 
 # 9. Wt.level x Cov.Others (-0.44)
-cor.test(data$Wt.level, data$Cov.Spong, method= "spearman") # NAO 
+cor.test(data$Wt.level, data$Cov.Spong, method= "spearman") # NAO
 plot(data$Wt.level, data$Cov.Spong)
 
 # 10. Weight x Cov.Spong (0.32)
@@ -648,7 +653,7 @@ plotResiduals(simulationOutput, data$Expo.area)
 
 
 # Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod1c, 
+simRes <- simulateResiduals(fittedModel = mod1c,
                                     n = 1000)
 plot(simRes) # good
 
@@ -668,13 +673,13 @@ plot(pred_mod1f)
 
 windows(12,6)
 
-plot(pred_mod1c, add.data=T, show.title=T,facets = T, ci=T) + 
+plot(pred_mod1c, add.data=T, show.title=T,facets = T, ci=T) +
   theme_classic() + ylab("N° Chitons") +  xlab("Expo.area") +
   labs(colour="") + guides(colour=guide_legend(ncol=4)) +
   theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
         axis.text=element_text(size=12),axis.title=element_text(size=14),
         legend.position="bottom",legend.title=element_text(size=13),
-        legend.text=element_text(size=12), strip.text=element_text(size=rel(1.3))) 
+        legend.text=element_text(size=12), strip.text=element_text(size=rel(1.3)))
 
 
 #install.packages("glmtoolbox")
@@ -782,7 +787,7 @@ anova(mod4, mod4a, mod4b,mod4c, mod4d, mod4e,mod4f)
 simulationOutput <- simulateResiduals(fittedModel = mod4b)
 plot(simulationOutput)
 
-simRes <- simulateResiduals(fittedModel = mod4b, 
+simRes <- simulateResiduals(fittedModel = mod4b,
                             n = 1000)
 plot(simRes) # good
 
