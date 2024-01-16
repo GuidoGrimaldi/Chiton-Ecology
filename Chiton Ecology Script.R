@@ -5,21 +5,15 @@
 # Script for: "chitons.eco.data"
 #++++++++++++++++++++++++#
 
-# Setting ####
-R.utils::getRelativePath(getwd())
-usethis::create_project("~/Documentos/R sessions/Chiton Ecology")
 
-usethis::use_git() # 2 "Yeah" / 3 "Yes"
+# Data Raw ####
+usethis::use_data_raw("chitons.eco.data.xlsx")
 
+library(magrittr)
 
-gitcreds::gitcreds_set()
+data <- "chitons.eco.data.xlsx" %>%
+  readxl::read_xlsx() %>%
 
-usethis::use_github()
-
-
-setwd("C:\\Users\\guido\\Documentos\\Git\\2023_Ecology_chitons")
-getwd()
-dir()
 
 # Packages ####
 install.packages("MuMIn")
@@ -31,10 +25,10 @@ library(AICcmodavg)
 library(beeswarm) # For exploration graphs
 library(MuMIn)
 
-install.packages("ggplot2")
-install.packages("rlang")
-install.packages("ggeffects")
-install.packages("effects")
+#install.packages("ggplot2")
+#install.packages("rlang")
+#install.packages("ggeffects")
+#install.packages("effects")
 library(ggplot2)
 library(ggeffects)
 
@@ -48,61 +42,79 @@ install.packages("HH")
 library(HH)
 vif(data)
 
-# Data ####
+# Importing data ####
 
 data <- read.csv("chitons.eco.data.csv", sep=";",dec=".", header=T)
-head(data)
-dim(data)
 str(data)
 data$fSite <- factor(data$Site)
-dim(data)
 
 # Variables ####
 
-# a. Variable Y:
-# + Chiton_F: Abundancia de quitons fluorescentes (Ischonplax pectinata)
+# A. Response Variable:
+# + "Chiton_F": abundance of fluorescent chitons (Ischonoplax pectinata)
 
-# b. Variable X:
-# + "Site" -> Locais de coleta (Fator)
-# + "Samp.Time" -> Tempo de amostragem (min)
-# + "Temp" -> Temperatura da agua (°C) - Var. discreta
-# + "Wt.level" -> Altura da mare em relacao a base da rocha (cm) - Var. discreta
-# + "Weight" -> Peso (Kg) - Var. continua
-# + "Exposed.area -> Area superficial lateral exposta (cm2) - Var. continua
-# + "Cov.Flu" -> % cobertura alga CCA + Peyssonnelia
-# + "Cov.DeathCCAPey" -> % cobertura de alga CCA e Pey morta.
-# + "Cov.Others" -> % cobertura de outros substratos (rocha nua, "mucos", other)
-# + "Cov.Asci" -> % cobertura de Ascidias
-# + "Cov.Bryo" -> % cobertura de Briozoarios
-# + "Cov.Spon" -> % cobertura de Esponjas.
+# B. Explanatory Variable:
+# + "Site": study sites (factor)
+# + "Samp.Time": sampling time (min)
+# + "Temp": water temperature (°C)
+# + "Wt.level": water level in relation to the base of the boulder (cm)
+# + "Weight": boulder weight (Kg)
+# + "Area.total": boulder surface area (cm2)
+# + "Ara.lateral": exposed side surface area (cm2)
+# + "Cov.Flu": coverage of living fluorescent substrates on the side of the boulder (%)
+# + "Cov.DeathCCAPey": coverage of no living fluorescent substrates (%)
+# + "Cov.Others": coverage of other substrates, e.g. bare rock, 'mucus', others (%)
+# + "Cov.Asc": ascidians cover (%)
+# + "Cov.Bryo": briozoans cover (%)
+# + "Cov.Spong": sponges cover (%)
 
-# Data Exploring ####
+summary(data)
 
-# 1. Amostragem balanceadas ?
-tapply(data$Chiton_F,data$fSite,length) # YES
+# Data exploration ####
 
-# 2. Missing data ?
+# Missing data ?
 summary(data) # NO
 
-# 3. Zero trouble Y ?
+# Balanced sampling ?
+tapply(data$Chiton_F,data$fSite,length) # YES
+
+# Percentage of occupied boulders?
+
+boulders <- length(data$Chiton_F)
+occupied <- length(data$Chiton_F[data$Chiton_F!=0])
+percentage <- (occupied*100)/boulders
+percentage # 36.6 % occupied boulders
+
+# Chapman 2005 encontrou valor similar (30% de ocupacao)
+
+# Total chiton abundance:
+sum(data$Chiton_F) # 137
+
+# Chiton abundance/ reef:
+tapply(data$Chiton_F,data$fSite,sum) # Buzios eh a maior abundancia
+
+# Zero trouble Y ?
 table(data$Chiton_F)
 plot(table(data$Chiton_F))
-barplot(table(data$Chiton_F)) # Bastante zeros!
+barplot(table(data$Chiton_F)) # Parece bastante zeros!
 
 # Podemos saber a proporcao de zeros aplicando o seguinte calculo:
 sum(data$Chiton_F==0)/length(data$Chiton_F)*100
 
 # Proporcao dos dados que sao iguais a zero eh 63.33%
+# Pode ser possível o uso de um modelos inflacionado por zeros.
+
 
 # Vamos olhar em um histograma com a distribuicao de probabilidade
 hist(data$Chiton_F, prob = T, breaks=15)
 rug(data$Chiton_F)
 lines(density(data$Chiton_F), col="blue")
 
-# Os dados apresentam uma distribuicao unimodal nao normal, ja esperada para dados discretos.
+# Nossa variavel resposta apresenta uma distribuicao unimodal nao normal, ja esperada para
+# dados discretos (contagem).
 # Mas  vamos examinar...
 
-# 4. Normality Y ?
+# Normality Y ?
 
 # Qual seria a distribuicao normal teorica a partir da media e desvio padrao da
 # abundancia observada ?
@@ -142,13 +154,516 @@ shapiro.test(data$Chiton_F) # NAO NORMAL
 # Conforme vizualizados, nossa variavel resposta nao possui uma distribuicao normal,
 # portanto ha de se esperar que seus erros tambem nao sigam uma distribuicao normal
 
+# Homogeneity test:
+variancia <- tapply(data$Chiton_F,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [2]/ variancia [1]  # A variancia de Buzios eh 66x maior que BF
+
+# Teste de Bartlett:
+bartlett.test(data$Chiton_F ~ data$fSite) # H0 aceita (Homocedastica)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Chiton_F ~ data$fSite) # H0 aceita (Homocedastica)
+
+library(car)
+leveneTest(Chiton_F ~ fSite, data=data, center=mean) # H0 aceita (Homocedastica)
+
+# Ha diferenca entre praias?
+
+kruskal.test(Chiton_F ~ fSite,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+library(FSA)
+DT = dunnTest(Chiton_F ~ fSite,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+PT = DT$res
+PT
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+# De fato, Buzio eh diferente das demais prais
+
+
+
+# ~Sampling Time ####
+tapply(data$Samp.time,data$f.Site,mean)
+tapply(data$Samp.time,data$f.Site,sd)
+
+# Normality test:
+shapiro.test(data$Samp.time) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Samp.time,data$f.Site,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [2]/ variancia [3]  # Buzios eh 2x maior...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Samp.time ~ data$f.Site) # H0 aceita (Homocedastica)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Samp.time ~ data$Site) # H0 aceita (Homocedastica)
+
+library(car)
+leveneTest(Samp.time ~ f.Site, data=data, center=mean) # H0 aceita (Homocedastica)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Samp.time ~ f.Site,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+library(FSA)
+DT = dunnTest(Samp.time ~ f.Site,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+PT = DT$res
+PT
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+
+# ~Temperature ####
+
+## Global Water Temperature
+summary(data$Temp)
+mean(data$Temp)
+sd(data$Temp)
+
+  ## Water Temperature by Reef
+tapply(data$Temp,data$Site,mean)
+tapply(data$Temp,data$Site,sd)
+
+boxplot(Temp~Site, data = data)
+
+
+# Normality test:
+shapiro.test(data$Temp) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Temp,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [1]/ variancia [2]  # BF eh 3.66x maior...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Temp ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Temp ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+library(car)
+leveneTest(Temp ~ fSite, data=data, center=mean) # H0 rejeitada (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Temp ~ Site,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(Temp ~ fSite,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+
+PT
+
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+# ~Wt.level ####
+
+mean(data$Wt.level)
+sd(data$Wt.level)
+
+min(data$Wt.level)
+
+tapply(data$Wt.level,data$fSite,mean)
+tapply(data$Wt.level,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Wt.level) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Wt.level,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [2]/ variancia [4]  # Buzios eh 20x maior...provavelmente heterocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Wt.level ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Wt.level ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+library(car)
+leveneTest(Wt.level ~ fSite, data=data, center=mean) # H0 rejeitada (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Wt.level ~ Site,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(Wt.level ~ fSite,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+PT
+
+library(rcompanion)
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+# ~Weight ####
+mean(data$Weight)
+sd(data$Weight)
+min(data$Weight)
+
+tapply(data$Weight,data$fSite,mean)
+tapply(data$Weight,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Weight) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Weight,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [2]/ variancia [4]  # Buzios eh 1.83.66x maior...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Weight ~ data$fSite) # H0 Aceitada (Homocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Weight ~ data$fSite) # H0 Aceitada (Homocedastico)
+
+library(car)
+leveneTest(Weight ~ fSite, data=data, center=mean) # H0 Aceitada (Homocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Weight ~ Site,
+             data = data) # H0 aceita, nao diferenca entre praias
+
+# ~Area Total ####
+
+tapply(data$Area.total,data$fSite,mean)
+tapply(data$Area.total,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Area.total) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Area.total,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [2]/ variancia [1]  # Buzios eh 3x maior...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Area.total ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Area.total ~ data$fSite) # H0 aceita (Homocedastico)
+
+library(car)
+leveneTest(Area.total ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Area.total ~ Site,
+             data = data) # H0 aceita, nao ha diferenca entre praias
+
+
+# ~Exposed.area ####
+tapply(data$Expo.area,data$fSite,mean)
+tapply(data$Expo.area,data$fSite,sd)
+
+tapply(data$Area.total,data$fSite,mean)
+tapply(data$Area.total,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Expo.area) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Expo.area,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [2]/ variancia [1]  # Buzios eh 3x maior...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Expo.area ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Expo.area ~ data$fSite) # H0 aceita (Homocedastico)
+
+library(car)
+leveneTest(Expo.area ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Expo.area ~ Site,
+             data = data) # H0 aceita, nao ha diferenca entre praias
+
+# ~Cov.Flu ####
+tapply(data$Cov.Flu,data$fSite,mean)
+tapply(data$Cov.Flu,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Cov.Flu) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Cov.Flu,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [3]/ variancia [2]  # Pitangui eh 2.35x maior...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(data$Cov.Flu ~ data$fSite) # H0 aceita (Homocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Cov.Flu ~ data$fSite) # H0 aceita (Homocedastico)
+
+library(car)
+leveneTest(Cov.Flu ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Cov.Flu ~ Site,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(Cov.Flu ~ fSite,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+
+PT
+
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+
+
+# ~Cov.Asc ####
+tapply(data$Cov.Asc,data$fSite,mean)
+tapply(data$Cov.Asc,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Cov.Asc) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Cov.Asc,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [3]/ variancia [1]  # Pitangui eh 11x maior que BF
+
+# Teste de Bartlett:
+bartlett.test(data$Cov.Asc ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Cov.Asc ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+library(car)
+leveneTest(Cov.Asc ~ fSite, data=data, center=mean) # H0 rejeitada (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Cov.Asc ~ Site,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(Cov.Asc ~ fSite,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+
+PT
+
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+
+
+# ~Cov.Bryo ####
+tapply(data$Cov.Bryo,data$fSite,mean)
+tapply(data$Cov.Bryo,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Cov.Bryo) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Cov.Bryo,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [4]/ variancia [2]  # Santa Rita eh 13x maior que Buzios
+
+# Teste de Bartlett:
+bartlett.test(data$Cov.Bryo ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Cov.Bryo ~ data$fSite) # H0 aceita (Homocedastico)
+
+library(car)
+leveneTest(Cov.Bryo ~ fSite, data=data, center=mean) # H0 Rejeitada (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Cov.Bryo ~ Site,
+             data = data) # H0 aceita, nao ha diferenca entre praias
+
+
+# ~Cov.Spong ####
+tapply(data$Cov.Spong,data$fSite,mean)
+tapply(data$Cov.Spong,data$fSite,sd)
+
+# Normality test:
+shapiro.test(data$Cov.Spong) # Nao  normal
+
+# Homogeneity test:
+variancia <- tapply(data$Cov.Spong,data$fSite,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [3]/ variancia [1]  # Pitangui eh 28x maior que BF
+
+# Teste de Bartlett:
+bartlett.test(data$Cov.Spong ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(data$Cov.Spong ~ data$fSite) # H0 rejeitada (Heterocedastico)
+
+library(car)
+leveneTest(Cov.Spong ~ fSite, data=data, center=mean) # H0 rejeitada (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(Cov.Spong ~ Site,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(Cov.Spong ~ fSite,
+              data=data,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+
+PT
+
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+
+
+
 # 5. Outliers Y & X ?
 
 # A ferramenta grafica tipica utilizada para deteccao de outliers eh o boxplot.
 
 # Vamos analisar por partes:
 # Quitons:
-boxplot(data[,c(2,3)])
+boxplot(data$Chiton_F)
 
 # Coberturas:
 boxplot(data[,c(8:13)])
@@ -228,7 +743,10 @@ boxplot(Cov.DeathCCAPey ~ Site, varwidth = TRUE, data=data)
 boxplot(Cov.Asc ~ Site, varwidth = TRUE, data=data)
 boxplot(Cov.Spong ~ Site, varwidth = TRUE, data=data)
 boxplot(Cov.Bryo ~ Site, varwidth = TRUE, data=data)
-
+boxplot(Rug.base ~ Site, varwidth = TRUE, data=data)
+tapply(data$Rug.base,data$f.Site,sum)
+boxplot(Brittle ~ Site, varwidth = TRUE, data=data)
+tapply(data$Brittle,data$f.Site,sum)
 
 library(beeswarm)
 beeswarm::beeswarm(Weight ~ Site,data=data)
@@ -509,7 +1027,8 @@ plot(data$Wt.level, data$Cov.Spong)
 cor.test(data$Weight, data$Cov.Spong, method= "spearman") # Significante
 plot(data$Weight, data$Cov.Spong)
 
-
+# Discritivo
+summary(data)
 
 
 
@@ -531,19 +1050,579 @@ TukeyHSD(aov(Samp.time ~ Site, data=data),ordered=T)
 #   + Weight x Expo.area (0.54)
 #   + Temp. X Wt.level (-0.32)
 
-# Modelo ####
 
+# PCA ####
+
+env <- read.csv("pca.csv", sep=";",dec=".", header=T)
+head(env)
+
+library('vegan')
+env.z <- decostand(env[,-8],method="standardize")
+
+x11()
+par(mfrow=c(2,1))
+boxplot(env[,-8], col="bisque", main="Boxplot sem transformacao")
+boxplot(env.z, col="bisque", main="Boxplot com estandardizacao")
+
+euc <- vegdist(env.z, method="euc")
+head(as.matrix(euc))
+euc.s <- head(as.matrix(1-euc))
+
+pca <- rda(env[,-8], scale=TRUE)
+pca
+summary(pca)
+
+summary(pca)$species
+summary(pca)$sites
+pca$CA$eig
+
+sum(pca$CA$eig)
+
+explic <- (pca$CA$eig)/(sum(pca$CA$eig))*100
+explic
+
+## Seleção do númro e eixos
+### Kaiser-Guttman
+
+ev <- pca$CA$eig
+ev
+
+mean(ev)
+ev[ev > mean(ev)]
+
+### Broken stick
+
+n <- length(ev)
+bs.ev <- bstick(n,n)
+bs.ev
+
+### Visualizando
+
+x11()
+par(mfrow=c(2,1))
+barplot(ev, main="Eigenvalues - Kaiser-Guttman criterion",
+        col="bisque", las=2, ylim=c(0,120))
+abline(h=mean(ev), col="red") #average eigenvalue
+legend("topright", "Average eigenvalue", lwd=1, col=2, bty="n")
+barplot(t(cbind(ev,bs.ev)),beside=TRUE, col=c("bisque",2),
+        main="Eigenvalues - Broken stick model", las=2, ylim=c(0,120))
+legend("topright", c("eigenvalue", "Broken stick model"), pch=15,
+       col=c("bisque",2), bty="n")
+
+## Grafico PCA
+x11()
+par(mfrow=c(1,2))
+biplot(pca,scaling=1,main="PCA - scaling 1")
+biplot(env.std.pca,main="PCA - scaling 2")
+
+site.sc <- scores(pca,display="wa",choices=1:2)
+env.sc <- scores(pca,display="sp",choices=1:2)
+
+site.sc <- as.data.frame(site.sc)
+env.sc <- as.data.frame(env.sc)
+
+site <- env[,8]
+site.sc <- cbind(site.sc,site)
+head(site.sc)
+
+x11()
+par(mar=c(5,5,2,2))
+plot(pca,type="n",cex.lab=1.4,font.lab=2,cex.axis=1.2,
+     xlab=paste("PC 1 - ",round(explic[1],1),"%",sep=""),
+     ylab=paste("PC 2 - ",round(explic[2],1),"%",sep=""))
+axis(1,lwd=2,labels=F)
+axis(2,lwd=2,labels=F)
+box(lwd=2)
+points(site.sc$PC1[(site.sc$site=="Buzios")],
+       site.sc$PC2[(site.sc$site=="Buzios")],
+       pch=1,col="red",lwd=2,cex=1.6)
+
+points(site.sc$PC1[(site.sc$site=="Pitangui")],
+       site.sc$PC2[(site.sc$site=="Pitangui")],
+       pch=2,col="darkorange",lwd=2,cex=1.6)
+
+points(site.sc$PC1[(site.sc$site=="Baia Formosa")],
+       site.sc$PC2[(site.sc$site=="Baia Formosa")],
+       pch=3,col="forestgreen",lwd=2,cex=1.6)
+
+points(site.sc$PC1[(site.sc$site=="Santa Rita")],
+       site.sc$PC2[(site.sc$site=="Santa Rita")],
+       pch=4,col="blue",lwd=2,cex=1.6)
+
+arrows(x0=0,y0=0,x1=env.sc$PC1,y1=env.sc$PC2,length=0.15,angle=20,
+       col="royalblue")
+
+text(env.sc$PC1[(env.sc$PC1<0)&(env.sc$PC2>0)],
+     env.sc$PC2[(env.sc$PC1<0)&(env.sc$PC2>0)],
+     labels=rownames(env.sc)[(env.sc$PC1<0)&(env.sc$PC2>0)],
+     col="royalblue",pos=3,offset=0.3)
+text(env.sc$PC1[(env.sc$PC1<0)&(env.sc$PC2<0)],
+     env.sc$PC2[(env.sc$PC1<0)&(env.sc$PC2<0)],
+     labels=rownames(env.sc)[(env.sc$PC1<0)&(env.sc$PC2<0)],
+     col="royalblue",pos=1,offset=0.3)
+text(env.sc$PC1[env.sc$PC1>0],env.sc$PC2[env.sc$PC1>0],
+     labels=rownames(env.sc)[env.sc$PC1>0],pos=4,offset=0.3,
+     col="royalblue")
+
+legend("topright",legend=c("Buzios","Pitangui","Baia Formosa","Santa Rita"),
+       pch=c(1,2,3,4),col=c("red","darkorange","forestgreen","blue"),
+       bty="n",pt.cex=1.6,cex=1.2,pt.lwd=2)
+legend("topleft",legend=c("Buzios","Pitangui","Baia Formosa","Santa Rita"),
+       pch=c(1,2),col="black",bty="n",pt.cex=1.6,cex=1.2,pt.lwd=2)
+
+
+env.std=decostand(env[,-8], method="standardize")
+env.std.pca <- rda(env.std)
+env.std.pca
+
+
+
+
+# MODELOS
+## At boulder side ####
+
+# O objetivo eh investigar se a abundancia de quitons fluorescentes ('Chiton_F') eh influenciada por fatores ambientais e bióticos
+# presentes/ atuantes na escala espacial da lateral da rocha no quais os quítons habitam.
+
+# Hipótese: eh que a cobertura de substratos fluorescentes (cca+peyssonnelia) será um fator importante para explica a distribuição spacial dos quítons fluorescentes.
+
+data <- read.csv("rockside.csv", sep=";",dec=".", header=T)
+str(data)
+data$fSite <- factor(data$Site)
+
+## 1° Formula ####
+# Considerando apenas os parametros ambientais e cobertura do substrato:
+
+library(pscl)
+f1 <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.DeathCCAPey + Cov.Asc + Cov.Bryo + Cov.Spong + (1|fSite))
+
+# GLMM Poisson:
+
+# Modelo completo
+library(glmmTMB)
+mod1 <- glmmTMB(f1,family = poisson, data=data)
+summary(mod1)
+
+drop1(mod1, test="Chi")
+
+# Retirando o 'Cov.Asc' do Mod1, obtemos o modelo mod1a:
+f1a <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.DeathCCAPey + Cov.Bryo + Cov.Spong + (1|fSite))
+mod1a <- glmmTMB(f1a,family = poisson, data=data)
+summary(mod1a)
+drop1(mod1a, test="Chi")
+
+# Retirando o 'Cov.DeathCCAPey' do Mod1a, obtemos o modelo Mod1b:
+f1b <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + Cov.Spong + (1|fSite))
+mod1b <- glmmTMB(f1b,family = poisson, data=data)
+summary(mod1b)
+drop1(mod1b, test="Chi")
+
+# Retirando o 'Cov.Spong' do Mod1b, obtemos o modelo Mod1c:
+f1c <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + (1|fSite))
+mod1c <- glmmTMB(f1c,family = poisson, data=data)
+summary(mod1c)
+
+# Vamos comparar os modelos:
+
+library(MuMIn)
+model.sel(mod1, mod1a, mod1b, mod1c)
+
+# vendo a diferenca entre os modelos pela ANOVA:
+anova(mod1, mod1a, mod1b, mod1c)
+
+# Podemos considerar tanto o mod1c cquanto o mod1b, mas vamos coniderar o mod1c por ter o maior peso na explicação os modelos e ser o mais parcimonioso
+
+r.squaredGLMM(mod1c)
+
+install.packages("AICcmodavg")
+library(AICcmodavg)
+
+#setup a subset of models of Table 1
+Cand.models <- list(mod1, mod1a, mod1b, mod1c)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+
+#Vamos analisar o vif do modelo:
+# Calculo da inflacao da variancia para fatores lineares vif - fator de inflacao - menor que 3
+
+library(car)
+vif(mod1c)
+
+# Validacao:
+install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod1c)
+plot(simulationOutput)
+
+# Teste para inflacao de zero
+testZeroInflation(simulationOutput)
+
+# b. Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,2))
+plotResiduals(simulationOutput, data$Cov.Flu)
+plotResiduals(simulationOutput, data$Area.lateral)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod1c,
+                            n = 1000)
+plot(simRes) # good
+
+
+## 2° Formula ####
+# Considerando a presença de esécies de outros taxons na lateral da rocha:
+
+f2 <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms + Spong +
+                Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
+
+
+library(tidyverse)
+library(vegan) # decostand() function
+
+# Tranformando os dados de abundancias de coespecies em presenca-ausencia:
+data2 <- decostand(data[,15:29], "pa") %>% cbind(data[,1:14])
+head(data2)
+data2$fSite <- factor(data$Site)
+
+# Modelo completo:
+
+mod2 <- glmmTMB(f2,family = poisson, data=data2)
+summary(mod2)
+
+drop1(mod2, test="Chi")
+
+# Retirando 'Spong' chegamos ao mod2a:
+f2a <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms +
+                Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
+mod2a <- glmmTMB(f2a,family = poisson, data=data2)
+summary(mod2a)
+drop1(mod2a, test="Chi")
+
+# Retirando 'Worms' chegamos ao mod2b
+f2b <- formula(Chiton_F ~ Bryo + Asci + Crabs +
+                 Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
+mod2b <- glmmTMB(f2b,family = poisson, data=data2)
+summary(mod2b)
+drop1(mod2b, test="Chi")
+
+# Retirando 'Hermit' chegamos ao mod2c:
+f2c <- formula(Chiton_F ~ Bryo + Asci + Crabs +
+                 Urchins + Zoanthus  + Fissu + (1|fSite))
+mod2c <- glmmTMB(f2c,family = poisson, data=data2)
+summary(mod2c)
+drop1(mod2c, test="Chi")
+
+# Retirando 'Asci' chegamos ao mod2d:
+f2d <- formula(Chiton_F ~ Bryo + Crabs + Urchins + Zoanthus  + Fissu + (1|fSite))
+mod2d <- glmmTMB(f2d,family = poisson, data=data2)
+summary(mod2d)
+drop1(mod2d, test="Chi")
+
+# Retirando 'Bryo' chegamos ao mod2e:
+f2e <- formula(Chiton_F ~ Crabs + Urchins + Zoanthus  + Fissu + (1|fSite))
+mod2e <- glmmTMB(f2e,family = poisson, data=data2)
+summary(mod2e)
+drop1(mod2e, test="Chi")
+
+# Retirando 'Zoanthus' chegamos ao mod2f:
+f2f <- formula(Chiton_F ~ Crabs + Urchins + Fissu + (1|fSite))
+mod2f <- glmmTMB(f2f,family = poisson, data=data2)
+summary(mod2f)
+drop1(mod2f, test="Chi")
+
+# Retirando 'Zoanthus' chegamos ao mod2g:
+f2g <- formula(Chiton_F ~ Crabs + Fissu + (1|fSite))
+mod2g <- glmmTMB(f2g,family = poisson, data=data2)
+summary(mod2g)
+
+model.sel(mod2, mod2a, mod2b, mod2c,mod2d,mod2e,mod2f,mod2g)
+
+# vendo a diferenca entre os modelos pela ANOVA:
+anova(mod2, mod2a, mod2b, mod2c,mod2d,mod2e,mod2f,mod2g)
+
+simulationOutput <- simulateResiduals(fittedModel = mod2d)
+plot(simulationOutput)
+
+# Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+simRes <- simulateResiduals(fittedModel = mod2d,
+                            n = 1000)
+plot(simRes) # bad!
+
+# Apresentou problema no ajuste dos valores observados vs esperados pelo resíduos simulados
+# o Komogorov-Sminoff test falhou em aceitar a hipotese nulo (KS tes signifiativo, p=00.3)
+
+# Ir para distribuição Binomial Negativa do mod2d:
+
+f2d <- formula(Chiton_F ~ Bryo + Crabs + Urchins + Zoanthus  + Fissu + (1|fSite))
+mod2dNB <- glmmTMB(f2d,family = nbinom1, data=data2)
+summary(mod2dNB)
+
+simulationOutput <- simulateResiduals(fittedModel = mod2dNB)
+plot(simulationOutput)
+
+simRes <- simulateResiduals(fittedModel = mod2dNB,
+                            n = 1000)
+plot(simRes) # Good!
+
+# Modelo Ajustado!!
+
+# Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+
+## 3° Formula ####
+# Considerando a abundância das espécies que co-ocorrem na lateral da rocha:
+
+f3 <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms + Spong +
+                Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
+
+# Modelo completo:
+
+mod3 <- glmmTMB(f3,family = poisson, data=data)
+summary(mod3)
+
+drop1(mod3, test="Chi")
+
+# Retirando 'Hermit' chegamos ao mod3a:
+f3a <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms + Spong +
+                 Urchins + Zoanthus + Fissu + (1|fSite))
+mod3a <- glmmTMB(f3a,family = poisson, data=data)
+summary(mod3a)
+drop1(mod3a, test="Chi")
+
+# Retirando 'Worms' chegamos ao mod3b
+f3b <- formula(Chiton_F ~ Bryo + Asci + Crabs + Spong +
+               Urchins + Zoanthus + Fissu + (1|fSite))
+mod3b <- glmmTMB(f3b,family = poisson, data=data)
+summary(mod3b)
+drop1(mod3b, test="Chi")
+
+# Retirando 'Spong' chegamos ao mod3c:
+f3c <- formula(Chiton_F ~ Bryo + Asci + Crabs +
+                 Urchins + Zoanthus + Fissu + (1|fSite))
+mod3c <- glmmTMB(f3c,family = poisson, data=data)
+summary(mod3c)
+drop1(mod3c, test="Chi")
+
+# Retirando 'Fissu' chegamos ao mod3d:
+f3d <- formula(Chiton_F ~ Bryo + Asci + Crabs +
+                 Urchins + Zoanthus + (1|fSite))
+mod3d <- glmmTMB(f3d,family = poisson, data=data)
+summary(mod3d)
+drop1(mod3d, test="Chi")
+
+# Retirando 'Zoanthus' chegamos ao mod3e:
+f3e <- formula(Chiton_F ~ Bryo + Asci + Crabs +
+                 Urchins + (1|fSite))
+mod3e <- glmmTMB(f3e,family = poisson, data=data)
+summary(mod3e)
+drop1(mod3e, test="Chi")
+
+model.sel(mod3, mod3a, mod3b, mod3c,mod3d,mod3e)
+
+simulationOutput <- simulateResiduals(fittedModel = mod3d)
+plot(simulationOutput)
+
+# Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+simRes <- simulateResiduals(fittedModel = mod3d,
+                            n = 1000)
+plot(simRes) # bad!
+
+# Apresentou problema no ajuste dos valores observados vs esperados pelo resíduos simulados
+# o Komogorov-Sminoff test falhou em aceitar a hipotese nulo (KS tes signifiativo, p=00.3)
+
+# Ajustar o mod3d para Binomial Negativa:
+
+f3d <- formula(Chiton_F ~ Bryo + Asci + Crabs +
+                 Urchins + Zoanthus + (1|fSite))
+mod3dNB <- glmmTMB(f3d,family = nbinom1, data=data)
+summary(mod3dNB)
+
+simulationOutput <- simulateResiduals(fittedModel = mod3dNB)
+plot(simulationOutput)
+
+# Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+simRes <- simulateResiduals(fittedModel = mod3dNB,
+                            n = 1000)
+plot(simRes) # bad!
+
+# Modelo não ajustado
+
+
+## Modelo Lateral ####
+
+# Vou criar juntando as variaveis eligidas por cada modelo:
+
+f4 <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + Bryo + Asci +
+                Crabs + Urchins + Zoanthus + Fissu + (1|fSite))
+
+# Modelo completo:
+
+mod4 <- glmmTMB(f4,family = poisson, data=data) # Estou considerando abundancias
+summary(mod4)
+drop1(mod4, test="Chi")
+
+# Tirando 'Asci' chegamos ao mod4a:
+
+f4a <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + Bryo +
+                Crabs + Urchins + Zoanthus + Fissu + (1|fSite))
+mod4a <- glmmTMB(f4a,family = poisson, data=data) # Estou considerando abundancias
+summary(mod4a)
+drop1(mod4a, test="Chi")
+
+# Tirando 'Bryo' chegamos ao mod4b:
+
+f4b <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo  +
+                 Crabs + Urchins + Zoanthus + Fissu + (1|fSite))
+mod4b <- glmmTMB(f4b,family = poisson, data=data) # Estou considerando abundancias
+summary(mod4b)
+drop1(mod4b, test="Chi")
+
+# Tirando 'Zoanthus' chegamos ao mod4c:
+
+f4c <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo  +
+                 Crabs + Urchins + Fissu + (1|fSite))
+mod4c <- glmmTMB(f4c,family = poisson, data=data) # Estou considerando abundancias
+summary(mod4c)
+drop1(mod4c, test="Chi")
+
+# Tirando 'Fissu' chegamos ao mod4d:
+
+f4d <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo  +
+                 Crabs + Urchins  + (1|fSite))
+mod4d <- glmmTMB(f4d,family = poisson, data=data) # Estou considerando abundancias
+summary(mod4d)
+drop1(mod4d, test="Chi")
+
+# Vamos comparar os modelos:
+
+library(MuMIn)
+model.sel(mod4, mod4a, mod4b, mod4c, mod4d)
+
+# vendo a diferenca entre os modelos pela ANOVA:
+anova(mod4, mod4a, mod4b, mod4c, mod4d)
+
+# Podemos considerar tanto o mod1c cquanto o mod1b, mas vamos coniderar o mod1c por ter o maior peso na explicação os modelos e ser o mais parcimonioso
+
+r.squaredGLMM(mod4d)
+
+#Vamos analisar o vif do modelo:
+# Calculo da inflacao da variancia para fatores lineares vif - fator de inflacao - menor que 3
+
+library(car)
+vif(mod4d)
+
+
+# Validacao:
+
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod4d)
+plot(simulationOutput)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod4d,
+                            n = 1000)
+plot(simRes) # good
+
+# Vou odar o mod4d co nbnomial:
+mod4dNB1 <- glmmTMB(f4d,family = nbinom1, data=data) # Estou considerando abundancias
+mod4dNB2 <- glmmTMB(f4d,family = nbinom2, data=data) # Estou considerando abundancias
+summary(mod4dNB1)
+summary(mod4dNB2)
+
+simulationOutput <- simulateResiduals(fittedModel = mod4dNB2)
+plot(simulationOutput)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod4dNB2,
+                            n = 1000)
+plot(simRes) # good
+
+# one of the possible test, for other options see ?testResiduals / vignette
+testDispersion(simRes)
+testZeroInflation(simulationOutput)
+testResiduals(simRes)
+testUniformity(simulationOutput = simRes)
+# b. Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,2))
+plotResiduals(simulationOutput, data$Cov.Flu)
+plotResiduals(simulationOutput, data$Cov.Bryo)
+
+# Inflação de zero
+
+mod4dZi <- glmmTMB(f4d,family = poisson, zi=~Samp.time, data=data)
+summary(mod4dZi)
+
+simulationOutput <- simulateResiduals(fittedModel = mod4dZi)
+plot(simulationOutput)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod4dZi,
+                            n = 1000)
+plot(simRes) # good
+
+
+
++++++++++
+# Modelo disconsiderando a inflacao de zero:
 library(glmmTMB)
 
-# Modelo disconsiderando a inflacao de zero:
-
-mod0 <- glmmTMB(Chiton_F ~ Samp.time + Temp + Expo.area + Cov.DeathCCAPey + Cov.Flu + Cov.Asc + Cov.Bryo + Wt.level + (1|fSite),
+mod0 <- glmmTMB(Chiton_F ~ Temp + Wt.level + Weight + Area +
+                  Cov.Flu + Cov.DeathCCAPey + Cov.Asc + Cov.Bryo + Cov.Spong +
+                  F.sand + C.sand + Granule + Pebbles + f.Cobbles + Boulders + Rug.base +
+                  Bryo + Asci + Bival + Crabs + Shrimp + Barna + Worms + Spong +
+                  Urchins + Brittle + Coral + Zoanthus + Flatworm + Hermit + Gastro + (1|f.Site) + (1|Samp.time),
                 family = nbinom1(link = "log"), zi=~0, data = data)
 
 summary(mod0)
 
+# Reduzindo modelo 0:
+
+drop1(mod0, test="Chi")
+
+mod0a <- glmmTMB(Chiton_F ~ Temp + Expo.area + Cov.DeathCCAPey + Cov.Flu + Cov.Bryo + Wt.level + (1|fSite) + (1|Samp.time),
+                 family = nbinom1(link = "log"), zi=~1, data = data)
+
+summary(mod0a)
+
+
+
+
+
+
 
 # Modelo c/ zero inflado:
+
+mod1 <- glmmTMB(Chiton_F ~ Temp + Wt.level + Weight + Area +
+                  Cov.Flu + Cov.DeathCCAPey + Cov.Asc + Cov.Bryo + Cov.Spong +
+                  F.sand + C.sand + Granule + Pebbles + Cobbles + Boulders + Rug.base +
+                  Bryo + Asci + Bival + Crabs + Shrimp + Barna + Worms + Spong +
+                  Urchins + Brittle + Coral + Zoanthus + Flatworm + Hermit + Gastro + (1|f.Site) + (1|Samp.time),
+                family = nbinom1(link = "log"), zi=~1, data = data)
+
+summary(mod1)
 
 mod1 <- glmmTMB(Chiton_F ~ Temp + Expo.area + Cov.DeathCCAPey + Cov.Flu + Cov.Asc + Cov.Bryo + Wt.level + (1|fSite) + (1|Samp.time),
                 family = nbinom1(link = "log"), zi=~1, data = data)
@@ -563,7 +1642,7 @@ summary(mod2)
 drop1(mod1, test="Chi") # Retirando Chiton_NF
 
 mod1a <- glmmTMB(Chiton_F ~ Temp + Expo.area + Cov.DeathCCAPey + Cov.Flu + Cov.Bryo + Wt.level + (1|fSite) + (1|Samp.time),
-                family = nbinom1(link = "log"), zi=~1, data = data)
+                 family = nbinom1(link = "log"), zi=~1, data = data)
 
 summary(mod1a)
 drop1(mod1a, test="Chi") # Retirando Cov.Asc
@@ -654,7 +1733,7 @@ plotResiduals(simulationOutput, data$Expo.area)
 
 # Randomizacoes:
 simRes <- simulateResiduals(fittedModel = mod1c,
-                                    n = 1000)
+                            n = 1000)
 plot(simRes) # good
 
 
@@ -698,13 +1777,13 @@ vif(data[,c(2:13)],y.name="Cov.Others")
 
 # MODELO 3:
 mod3 <- glmmTMB(Chiton_F ~ Cov.DeathCCAPey + Expo.area + Cov.Others+ Cov.Flu + Cov.Asc + Cov.Bryo + Wt.level + (1|fSite),
-                 family = nbinom1(link = "log"), zi=~1, data = data)
+                family = nbinom1(link = "log"), zi=~1, data = data)
 
 summary(mod3)
 drop1(mod3, test="Chi") # Retirando Cov.Asc
 
 mod3a <- glmmTMB(Chiton_F ~ Cov.DeathCCAPey + Expo.area + Cov.Others+ Cov.Flu + Cov.Bryo + Wt.level + (1|fSite),
-                family = nbinom1(link = "log"), zi=~1, data = data)
+                 family = nbinom1(link = "log"), zi=~1, data = data)
 
 summary(mod3a)
 drop1(mod3a, test="Chi") # Retirando Cov.DeathCCAPEY
@@ -857,3 +1936,237 @@ install.packages(c("usethis", "renv", "tidyverse"))
 install.packages("R.utils")
 
 R.utils::getRelativePath(getwd())
+
+# CHI-SQUARE TEST ####
+
+## 1. magnetic orientation ####
+
+orient <- as.matrix(read.csv("orientation.csv",
+                             sep = ";",dec=".",
+                             row.names = 1, header=T))
+orient
+chisq.test(orient)
+
+
+dir()
+
+## 2. Substrate choice
+
+choice <- as.matrix(read.csv("choice.csv",
+                             sep = ";",dec=".",
+                             row.names = 1, header=T))
+choice
+chisq.test(choice)
+chisq.test(choice)$expected
+
+fisher.test(choice)
+binom.test(choice)
+
+library(MASS)
+
+atRisk
+
+data(quine)
+quine
+
+###LOgit
+
+
+
+
+Tbdeer <- read.table(file.choose(), header = TRUE, dec = ".") # dados Tbdeer.txt
+head(Tbdeer)
+
+# Variavel resposta: DeerPosCervi (veados com parasita)/DeerSampleCervi (Amostrados)
+# Variaveis explanatorias: OpenLand (area aberta); Scrubland (area arbustiva);
+# PinePlantation(pinos plantacao); QuercusPlants (numero de Carvalho);
+# QuercusTrees (numero de arvores de Carvalho);
+# WildBoarIndex (Indice de abundancia de javali)
+# ReedDeerIndex (indice de abundancia de veados); EstateSize (Tamanho da area);
+# Fenced (area cercada)
+
+# Algumas preparacoes:
+# Um novo objeto precisa ser criado para definir a variavel resposta (proporcao de veados positivos para E.cervi)
+DeerNegCervi <- Tbdeer$DeerSampledCervi - Tbdeer$DeerPosCervi
+# Area cercada binaria (incluir como fator)
+Tbdeer$fFenced <- factor(Tbdeer$Fenced)
+
+# O modelo (Incluindo descritores de habitat):
+Deer1=glm(cbind(DeerPosCervi,DeerNegCervi)~OpenLand+ # perceba a construcao da variavel resposta
+            ScrubLand+PinePlantation+QuercusPlants+
+            QuercusTrees+ReedDeerIndex+EstateSize+fFenced,
+          family=binomial, data = Tbdeer)
+summary(Deer1)
+
+# Calcular VIF (Variance inflation factor) para avaliar colinearidade entre variaveis
+library(car)
+vif(Deer1) # PinePlantation talvez pode ser retirada
+
+Deer2=glm(cbind(DeerPosCervi,DeerNegCervi)~OpenLand+
+            ScrubLand+QuercusPlants+
+            QuercusTrees+ReedDeerIndex+EstateSize+fFenced,
+          family=binomial, data = Tbdeer)
+summary(Deer2)
+vif(Deer2)
+
+logit <- read.csv("logit.csv",sep = ";",dec=".", header=T)
+head(logit)
+class(logit)
+str(logit)
+
+par(mfrow= c (1,1))
+qqnorm(logit$time)
+qqline(logit$time, col="blue", lwd=2)
+library(car)
+qqPlot(logit$time, distribution="pois", lambda=mean(logit$time))
+
+
+shapiro.test(logit$time) # NAO NORMAL
+
+
+variancia <- tapply(data$Chiton_F,data$fSite,var)
+variancia
+
+P1 <- glm(time~subst+treat, data=logit, family=poisson, na.action = na.omit)
+summary(P1)
+
+
+
+
+drop1(P1, test="Chi")
+
+P2 <- update(P1,~.-treat)
+summary(P2)
+
+(74.843/26) # Residual desviance/ degrees of freedom >1 is overdisersion
+
+P2q <- glm(time~subst,subst*treat, data=logit, family=quasipoisson)
+summary(P2q)
+par(mfrow= c (2,2))
+plot(P2q)
+
+
+
+
+library(MuMIn)
+model.sel(P1, P2)
+anova(P1,P2)
+
+par(mfrow=c(2,2))
+plot(P2)
+
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = P2q)
+plot(simulationOutput)
+
+# b. Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,2))
+plotResiduals(simulationOutput, logit$time)
+plotResiduals(simulationOutput, logit$subst)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = P2,
+                            n = 1000)
+plot(simRes) # good
+
+
+# CHOICE EXPERIMENT ####
+
+# database: chiton.experiment.csv
+# "choice": experimental choice made (1) and not made (O)
+# "subst": fluorescence substrate (1) and no fluorescence substrate (2)
+# "treat": treatments, "Daylight" (1) and "Dawn light" (2)
+# "orient": experimental arena orientation, North (1), South (2), East (3) and West (4)
+# "time": time taken to make the choice (Unit: minutes)
+
+data <- read.csv("chiton.experiment.csv",sep = ";",dec=".", header=T)
+
+head(data)
+dim(data)
+class(data)
+str(data)
+summary(data)
+
+# Successful choice:
+sum(data$choice, na.rm=T) # 29 successful
+
+# Unsuccessful choice:
+length(data$choice[data$choice!=1]) # 51 unsuccessful
+
+# Percentage of successful trials:
+trials <- length(data$choice)
+successful <- length(data$choice[data$choice!=0])
+percentage <- (successful*100)/trials
+percentage # 36.25% successful trials
+
+# Choice/ treatment:
+tapply(data$choice,data$treat,sum, na.rm=T) # Daylight (8) & Dawn (21)
+
+# Choice/ orientation:
+tapply(data$choice,data$orient,sum,
+       na.rm=T) # North (7), South (5), East (6) and West (11)
+
+
+# Fluorescence substrate choice:
+sum(data$subst[data$subst==1], na.rm=T) # 19
+
+# Non-fluorescence substrate choice:
+length(data$subst[data$subst>1 & !is.na(data$subst)]) # 10
+
+# Fluorescence choice/ treatment:
+tapply(data$subst[data$subst==1],
+       data$treat[data$subst==1],sum,na.rm=T) # Daylight (7) & Dawn (12)
+
+# Spend time to choice/ treatment:
+tapply(data$time,data$treat,mean,na.rm=T) # Daylight (6.67) & Dawn (7.92)
+tapply(data$time,data$treat,sd,na.rm=T)
+boxplot(time ~ treat,varwidth = TRUE, data=data)
+
+
+# Spend time / substrate choice:
+tapply(data$time,data$subst,mean,na.rm=T) # Daylight (8.24) & Dawn (6.32)
+tapply(data$time,data$subst,sd,na.rm=T)
+boxplot(time ~ subst,varwidth = TRUE, data=data)
+
+library(lattice)
+xyplot(time ~ subst | treat, data=data, type=c("p","r"))
+
+# QQ-plot for 'time':
+par(mfrow= c (1,1))
+qqnorm(data$time)
+qqline(data$time, col="blue", lwd=2)
+
+# Normality test:
+shapiro.test(data$time) # H0 rejected (non-normal)
+
+# Homogeneity test:
+variance <- tapply(data$time,data$subst,var)
+variance
+
+variance [1]/ variance [2] # 1.07
+
+# Bartlett' test:
+bartlett.test(data$time ~ data$subst) # H0 accepted (homoscedasticity)
+
+# Fligner-Killeen' test:
+fligner.test(data$time ~ data$subst) # H0 accepted (homoscedasticity)
+
+
+# Kruaskal-Wallis test:
+
+kruskal.test(time ~ treat,
+             data = data) # H0 rejeitada, ha diferenca entre praias
+
+
+
+
+
+
+
+
+
+B1 <- glm(choice~subst, data=logit, family = binomial(link="cloglog"))
+
+summary(B1)
