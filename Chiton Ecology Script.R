@@ -1937,142 +1937,8 @@ install.packages("R.utils")
 
 R.utils::getRelativePath(getwd())
 
-# CHI-SQUARE TEST ####
 
-## 1. magnetic orientation ####
-
-orient <- as.matrix(read.csv("orientation.csv",
-                             sep = ";",dec=".",
-                             row.names = 1, header=T))
-orient
-chisq.test(orient)
-
-
-dir()
-
-## 2. Substrate choice
-
-choice <- as.matrix(read.csv("choice.csv",
-                             sep = ";",dec=".",
-                             row.names = 1, header=T))
-choice
-chisq.test(choice)
-chisq.test(choice)$expected
-
-fisher.test(choice)
-binom.test(choice)
-
-library(MASS)
-
-atRisk
-
-data(quine)
-quine
-
-###LOgit
-
-
-
-
-Tbdeer <- read.table(file.choose(), header = TRUE, dec = ".") # dados Tbdeer.txt
-head(Tbdeer)
-
-# Variavel resposta: DeerPosCervi (veados com parasita)/DeerSampleCervi (Amostrados)
-# Variaveis explanatorias: OpenLand (area aberta); Scrubland (area arbustiva);
-# PinePlantation(pinos plantacao); QuercusPlants (numero de Carvalho);
-# QuercusTrees (numero de arvores de Carvalho);
-# WildBoarIndex (Indice de abundancia de javali)
-# ReedDeerIndex (indice de abundancia de veados); EstateSize (Tamanho da area);
-# Fenced (area cercada)
-
-# Algumas preparacoes:
-# Um novo objeto precisa ser criado para definir a variavel resposta (proporcao de veados positivos para E.cervi)
-DeerNegCervi <- Tbdeer$DeerSampledCervi - Tbdeer$DeerPosCervi
-# Area cercada binaria (incluir como fator)
-Tbdeer$fFenced <- factor(Tbdeer$Fenced)
-
-# O modelo (Incluindo descritores de habitat):
-Deer1=glm(cbind(DeerPosCervi,DeerNegCervi)~OpenLand+ # perceba a construcao da variavel resposta
-            ScrubLand+PinePlantation+QuercusPlants+
-            QuercusTrees+ReedDeerIndex+EstateSize+fFenced,
-          family=binomial, data = Tbdeer)
-summary(Deer1)
-
-# Calcular VIF (Variance inflation factor) para avaliar colinearidade entre variaveis
-library(car)
-vif(Deer1) # PinePlantation talvez pode ser retirada
-
-Deer2=glm(cbind(DeerPosCervi,DeerNegCervi)~OpenLand+
-            ScrubLand+QuercusPlants+
-            QuercusTrees+ReedDeerIndex+EstateSize+fFenced,
-          family=binomial, data = Tbdeer)
-summary(Deer2)
-vif(Deer2)
-
-logit <- read.csv("logit.csv",sep = ";",dec=".", header=T)
-head(logit)
-class(logit)
-str(logit)
-
-par(mfrow= c (1,1))
-qqnorm(logit$time)
-qqline(logit$time, col="blue", lwd=2)
-library(car)
-qqPlot(logit$time, distribution="pois", lambda=mean(logit$time))
-
-
-shapiro.test(logit$time) # NAO NORMAL
-
-
-variancia <- tapply(data$Chiton_F,data$fSite,var)
-variancia
-
-P1 <- glm(time~subst+treat, data=logit, family=poisson, na.action = na.omit)
-summary(P1)
-
-
-
-
-drop1(P1, test="Chi")
-
-P2 <- update(P1,~.-treat)
-summary(P2)
-
-(74.843/26) # Residual desviance/ degrees of freedom >1 is overdisersion
-
-P2q <- glm(time~subst,subst*treat, data=logit, family=quasipoisson)
-summary(P2q)
-par(mfrow= c (2,2))
-plot(P2q)
-
-
-
-
-library(MuMIn)
-model.sel(P1, P2)
-anova(P1,P2)
-
-par(mfrow=c(2,2))
-plot(P2)
-
-library(DHARMa)
-simulationOutput <- simulateResiduals(fittedModel = P2q)
-plot(simulationOutput)
-
-# b. Detecting missing predictors or wrong functional assumptions
-
-testUniformity(simulationOutput = simulationOutput)
-par(mfrow = c(1,2))
-plotResiduals(simulationOutput, logit$time)
-plotResiduals(simulationOutput, logit$subst)
-
-# Randomizacoes:
-simRes <- simulateResiduals(fittedModel = P2,
-                            n = 1000)
-plot(simRes) # good
-
-
-# CHOICE EXPERIMENT ####
+# CHITON CHOICE EXPERIMENT ####
 
 # database: chiton.experiment.csv
 # "choice": experimental choice made (1) and not made (O)
@@ -2087,10 +1953,11 @@ head(data)
 dim(data)
 class(data)
 str(data)
+
 summary(data)
 
 # Successful choice:
-sum(data$choice, na.rm=T) # 29 successful
+sum(data$choice) # 29 successful
 
 # Unsuccessful choice:
 length(data$choice[data$choice!=1]) # 51 unsuccessful
@@ -2108,30 +1975,40 @@ tapply(data$choice,data$treat,sum, na.rm=T) # Daylight (8) & Dawn (21)
 tapply(data$choice,data$orient,sum,
        na.rm=T) # North (7), South (5), East (6) and West (11)
 
-
 # Fluorescence substrate choice:
-sum(data$subst[data$subst==1], na.rm=T) # 19
+length(data$subst[data$subst=="FLUOR"& !is.na(data$subst)]) # 19
 
 # Non-fluorescence substrate choice:
-length(data$subst[data$subst>1 & !is.na(data$subst)]) # 10
+length(data$subst[data$subst=="UNFLU" & !is.na(data$subst)]) # 10
 
 # Fluorescence choice/ treatment:
-tapply(data$subst[data$subst==1],
-       data$treat[data$subst==1],sum,na.rm=T) # Daylight (7) & Dawn (12)
+tapply(data$subst[data$subst=="FLUOR" & !is.na(data$subst)],
+       data$treat[data$subst=="FLUOR" & !is.na(data$subst)],
+       length) # Daylight (7) & Dawn (12)
+
+# Fluorescence substrate / Orientation:
+tapply(data$subst[data$subst=="FLUOR" & !is.na(data$subst)],
+       data$orient[data$subst=="FLUOR" & !is.na(data$subst)],
+       length)
+
+# Non-fluorescence substrate / Orientation:
+tapply(data$subst[data$subst=="UNFLU" & !is.na(data$subst)],
+       data$orient[data$subst=="UNFLU" & !is.na(data$subst)],
+       length)
+
 
 # Spend time to choice/ treatment:
 tapply(data$time,data$treat,mean,na.rm=T) # Daylight (6.67) & Dawn (7.92)
 tapply(data$time,data$treat,sd,na.rm=T)
-boxplot(time ~ treat,varwidth = TRUE, data=data)
-
+boxplot(time ~ treat,varwidth = F, data=data)
 
 # Spend time / substrate choice:
 tapply(data$time,data$subst,mean,na.rm=T) # Daylight (8.24) & Dawn (6.32)
 tapply(data$time,data$subst,sd,na.rm=T)
-boxplot(time ~ subst,varwidth = TRUE, data=data)
+boxplot(time ~ subst,varwidth = F, data=data)
 
 library(lattice)
-xyplot(time ~ subst | treat, data=data, type=c("p","r"))
+xyplot(time ~ factor(subst) | treat, data=data, type=c("p","r"))
 
 # QQ-plot for 'time':
 par(mfrow= c (1,1))
@@ -2153,20 +2030,267 @@ bartlett.test(data$time ~ data$subst) # H0 accepted (homoscedasticity)
 # Fligner-Killeen' test:
 fligner.test(data$time ~ data$subst) # H0 accepted (homoscedasticity)
 
+# Wilcox.test:
 
-# Kruaskal-Wallis test:
+wilcox.test(data$time[data$treat=="Daylight"],
+            data$time[data$treat=="Dawn"],
+            conf.int=TRUE,
+            conf.level=0.95) # H0 accepted
 
-kruskal.test(time ~ treat,
-             data = data) # H0 rejeitada, ha diferenca entre praias
-
-
-
-
-
-
-
+wilcox.test(data$time[data$subst=="FLUOR"],
+            data$time[data$subst=="UNFLU"],
+            conf.int=TRUE,
+            conf.level=0.95) # H0 accepted
 
 
-B1 <- glm(choice~subst, data=logit, family = binomial(link="cloglog"))
+## Treatment x Orientation ####
+
+vector1 <- c(2,2,1,3,5,3,5,8)
+orient <- matrix(vector1,byrow=T,nrow = 2)
+colnames(orient)<-c("North", "South", "East", "West")
+rownames (orient) <- c("Daylight","Dawn")
+orient
+
+chisq.test(orient)
+chisq.test(orient)$expected
+
+fisher.test(orient)
+
+# Substrate choice x Orientation
+vector2 <- c(3,5,3,8,3,2,2,3)
+orient2 <- matrix(vector2,byrow=T,nrow = 2)
+colnames(orient2)<-c("East","North","South","West")
+rownames (orient2) <- c("Fluorescence","Non-Fluorescence")
+orient2
+
+chisq.test(orient2)
+chisq.test(orient2)$expected
+
+fisher.test(orient2)
+
+## 2. Substrate choice x Treatment
+
+vector3 <- c(7,12,1,9)
+choices <- matrix(vector3,byrow=T,nrow = 2)
+colnames(choices)<-c("Daylight","Dawn")
+rownames (choices) <- c("Fluorecence","Non-Fluorescence")
+choices
+
+chisq.test(choices, correct=F)
+chisq.test(choices)$expected
+
+fisher.test(choices)
+
+install.packages("Exact")
+library(Exact)
+
+exact.test(choices, method="z-pooled", model="Multinomial")
+
+# "choice" FAZER
+
+B1 <- glm(choice~subst*treat+time, data=data,
+          family = binomial(link="cloglog"), na.action = na.omit)
 
 summary(B1)
+drop1(B1, tst="Chi")
+
+B2 <- glm(choice~subst+treat+time, data=data,
+          family = binomial(link="cloglog"), na.action = na.omit)
+
+summary(B2)
+drop1(B2, tst="Chi")
+
+B3 <- glm(choice~subst+treat, data=data,
+          family = binomial(link="cloglog"), na.action = na.omit)
+
+summary(B3)
+
+B4 <- glm(choice~subst, data=data,
+          family = binomial, na.action = na.omit)
+
+summary(B4)
+
+B5 <- glm(choice~treat, data=data,
+          family = binomial(link="cloglog"), na.action = na.omit)
+
+summary(B5)
+
+library(MuMIn)
+model.sel(B1,B2,B3,B4,B5)
+anova(G1,G2,G3,G3a)
+
+
+# "time"
+
+kruskal.test(time ~ subst,
+             data = data)
+
+
+
+G1 <- glm(time~fsubst*ftreat, data=data, family=gaussian)
+summary(G1a)
+drop1(G1,test="Chi")
+
+G2 <- glm(time~fsubst+ftreat, data = data, family = gaussian)
+summary(G2)
+drop1(G2,test="Chi")
+
+G3 <- glm(time~subst, data = data, family = gaussian)
+summary(G3)
+
+data$subst2 <- relevel(data$fsubst, ref="UNFLU")
+levels(data$subst2)
+
+G3a <- glm(time~subst2, data = data, family = gaussian)
+summary(G3a)
+
+library(MuMIn)
+model.sel(G1,G1a,G2,G3,G3a)
+anova(G1,G2,G3,G3a)
+
+summary(G1)
+
+GM1 <- glm(time~subst*treat, data=data, family=Gamma, na.action = na.omit)
+summary(GM1)
+drop1(GM1,test="Chi")
+
+GM2 <- glm(time~fsubst+ftreat, data=data, family=Gamma)
+summary(GM2)
+drop1(GM2,test="Chi")
+
+GM3 <- glm(time~subst, data=data, family=Gamma)
+summary(GM3)
+drop1(GM3,test="Chi")
+
+(11.588/25) # 0.46
+
+library(car)
+vif(GM1)
+
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = GM1)
+plot(simulationOutput)
+
+#Conclusions: there is no obvious patterns in the qq-plot or residuals, or at least there are no obvious trends remaining that would be indicative of overdispersion or non-linearity.
+
+# Exploring the goodness of the fit of the model
+
+testUniformity(GM1)
+
+# Conclusions: neither Pearson residuals, Deviance or Kolmogorov-Smirnov test of uniformity indicate a lack of fit (p values greater than 0.05)
+
+AIC(G1, GM1)
+
+#Poisson deviance
+G1$deviance
+[1] 71.62288
+#Gaussian deviance
+GM1$deviance
+
+
+testOverdispersion(simulateResiduals(GM1, refit=T))
+
+# Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+simRes <- simulateResiduals(fittedModel = GM1,
+                            n = 1000)
+plot(simRes) # bad!
+
+
+
+par(mfrow=c(2,2))
+plot(G3)
+
+P1 <- glm(time~fsubst*ftreat, data=data, family=poisson)
+summary(P1)
+
+# deviance explained:
+(((82.686-71.623)/82.686)*100) # 13%
+
+# overdispersion?
+
+(71.623/25) # 2.86492
+
+library(glmmTMB)
+mod1 <- glmmTMB(time~fsubst*ftreat, data=data, family=nbinom1)
+summary(mod1)
+
+mod2 <- glmmTMB(time~fsubst+ftreat, data=data, family=nbinom1)
+summary(mod2)
+
+mod2 <- glmmTMB(time~fsubst, data=data, family=nbinom1)
+summary(mod2)
+
+library(car)
+vif(mod1)
+
+
+
+Q1 <- glm(time~fsubst*ftreat, data=data, family=quasipoisson, na.action = na.omit)
+summary(Q1)
+
+Q2 <- glm(time~subst+ftreat, data=data, family=quasipoisson, na.action = na.omit)
+summary(Q2)
+
+drop1(Q2, test="Chi")
+
+Q3 <- update(Q2,~.-treat)
+summary(Q3)
+
+library(MuMIn)
+model.sel(Q1, Q2, Q3)
+anova(Q1, Q2, Q3)
+
+par(mfrow=c(2,2))
+plot(mod1)
+
+preditos <- predict(Q1, type="response")
+RordQ <- data$time - preditos
+RpeS <- RordQ / sqrt(7.630148 * preditos)
+par(mfrow=c(1,1))
+plot(x=preditos, y=RpeS, main="Pearson residuals scaled", cex=2)
+abline(h=0, lty=2)
+
+
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = G1)
+plot(simulationOutput)
+
+# b. Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,2))
+plotResiduals(simulationOutput, data$time)
+plotResiduals(simulationOutput, data$fsubst)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = P2,
+                            n = 1000)
+plot(simRes) # good
+
+
+
+
+par(mfrow= c (2,2))
+plot(P2q)
+
+
+
+
+library(MASS)
+NB1 <- glm.nb(time~fsubst*ftreat, data=data, link="log", na.action = na.omit)
+summary(NB1)
+
+
+NB1 <- glm.nb(time~fsubst+ftreat, data=data, link="log", na.action = na.omit)
+summary(NB1)
+
+data$subst2 <- relevel(designANCOVA$sex, ref="male")
+levels(designANCOVA$sex2)
+
+B1 <- glm(fsubst~time+ftreat+forient, family=binomial, data=data)
+summary(B1)
+
+
