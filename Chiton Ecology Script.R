@@ -5,16 +5,6 @@
 # Script for: "chitons.eco.data"
 #++++++++++++++++++++++++#
 
-
-# Data Raw ####
-usethis::use_data_raw("chitons.eco.data.xlsx")
-
-library(magrittr)
-
-data <- "chitons.eco.data.xlsx" %>%
-  readxl::read_xlsx() %>%
-
-
 # Packages ####
 install.packages("MuMIn")
 library(DHARMa) # To validate model
@@ -32,7 +22,6 @@ library(MuMIn)
 library(ggplot2)
 library(ggeffects)
 
-
 #install.packages("glmtoolbox")
 library(glmtoolbox)
 
@@ -48,13 +37,19 @@ data <- read.csv("chitons.eco.data.csv", sep=";",dec=".", header=T)
 str(data)
 data$fSite <- factor(data$Site)
 
-# Variables ####
+macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
+str(macro)
+macro$fSite <- factor(macro$Site)
 
-# A. Response Variable:
+
+# Data Sets Variables ####
+
+## Data set: "data"
+### A. Response Variable:
 # + "Chiton_F": abundance of fluorescent chitons (Ischonoplax pectinata)
 
-# B. Explanatory Variable:
-# + "Site": study sites (factor)
+### B. Explanatory Variable:
+# + "Site": study sites
 # + "Samp.Time": sampling time (min)
 # + "Temp": water temperature (°C)
 # + "Wt.level": water level in relation to the base of the boulder (cm)
@@ -68,7 +63,34 @@ data$fSite <- factor(data$Site)
 # + "Cov.Bryo": briozoans cover (%)
 # + "Cov.Spong": sponges cover (%)
 
+## Data set:"macro"
+
+# + Asci:
+# + Barnacle:
+# + Bival:
+# + Brittle:
+# + Bryo:
+# + Cerithium:
+# + Coral:
+# + Crabs:
+# + C.merca:
+# + Fissu:
+# + Flatworms:
+# + Gastrop:
+# + Hermit:
+# + L.nassa:
+# + Not.ident:
+# + N.virgi
+# + P.pusio:
+# + Shrimp:
+# + Spong:
+# + T.viri:
+# + Urchins:
+# + Worms:
+# + Zoanthus:
+
 summary(data)
+
 
 # Data exploration ####
 
@@ -86,6 +108,7 @@ percentage <- (occupied*100)/boulders
 percentage # 36.6 % occupied boulders
 
 # Chapman 2005 encontrou valor similar (30% de ocupacao)
+
 
 # Total chiton abundance:
 sum(data$Chiton_F) # 137
@@ -194,19 +217,19 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
-# De fato, Buzio eh diferente das demais prais
-
+# De fato, Buzio eh diferente das demais praias
 
 
 # ~Sampling Time ####
-tapply(data$Samp.time,data$f.Site,mean)
-tapply(data$Samp.time,data$f.Site,sd)
+tapply(data$Samp.time,data$Site,sum)
+tapply(data$Samp.time,data$Site,mean)
+tapply(data$Samp.time,data$Site,sd)
 
 # Normality test:
 shapiro.test(data$Samp.time) # Nao  normal
 
 # Homogeneity test:
-variancia <- tapply(data$Samp.time,data$f.Site,var)
+variancia <- tapply(data$Samp.time,data$fSite,var)
 variancia
 
 # Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
@@ -215,22 +238,22 @@ variancia
 variancia [2]/ variancia [3]  # Buzios eh 2x maior...provavelmente homocedastico
 
 # Teste de Bartlett:
-bartlett.test(data$Samp.time ~ data$f.Site) # H0 aceita (Homocedastica)
+bartlett.test(data$Samp.time ~ data$fSite) # H0 aceita (Homocedastica)
 
 # Teste de Fligner-Killeen:
 fligner.test(data$Samp.time ~ data$Site) # H0 aceita (Homocedastica)
 
 library(car)
-leveneTest(Samp.time ~ f.Site, data=data, center=mean) # H0 aceita (Homocedastica)
+leveneTest(Samp.time ~ fSite, data=data, center=mean) # H0 aceita (Homocedastica)
 
 # Kruaskal-Wallis test:
 
-kruskal.test(Samp.time ~ f.Site,
+kruskal.test(Samp.time ~ fSite,
              data = data) # H0 rejeitada, ha diferenca entre praias
 
 # Dunn test:
 library(FSA)
-DT = dunnTest(Samp.time ~ f.Site,
+DT = dunnTest(Samp.time ~ fSite,
               data=data,
               method="bh")      # Adjusts p-values for multiple comparisons;
 
@@ -245,6 +268,7 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
+boxplot(Samp.time~fSite, data = data)
 
 # ~Temperature ####
 
@@ -253,12 +277,11 @@ summary(data$Temp)
 mean(data$Temp)
 sd(data$Temp)
 
-  ## Water Temperature by Reef
+## Water Temperature by Reef
 tapply(data$Temp,data$Site,mean)
 tapply(data$Temp,data$Site,sd)
 
 boxplot(Temp~Site, data = data)
-
 
 # Normality test:
 shapiro.test(data$Temp) # Nao  normal
@@ -364,6 +387,8 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
+boxplot(Wt.level~fSite, data = data)
+
 # ~Weight ####
 mean(data$Weight)
 sd(data$Weight)
@@ -398,7 +423,8 @@ leveneTest(Weight ~ fSite, data=data, center=mean) # H0 Aceitada (Homocedastico)
 kruskal.test(Weight ~ Site,
              data = data) # H0 aceita, nao diferenca entre praias
 
-# ~Area Total ####
+
+# ~ Boulder Area ####
 
 tapply(data$Area.total,data$fSite,mean)
 tapply(data$Area.total,data$fSite,sd)
@@ -430,7 +456,7 @@ kruskal.test(Area.total ~ Site,
              data = data) # H0 aceita, nao ha diferenca entre praias
 
 
-# ~Exposed.area ####
+# ~ Total Exposed Side area ####
 tapply(data$Expo.area,data$fSite,mean)
 tapply(data$Expo.area,data$fSite,sd)
 
@@ -456,14 +482,16 @@ bartlett.test(data$Expo.area ~ data$fSite) # H0 rejeitada (Heterocedastico)
 fligner.test(data$Expo.area ~ data$fSite) # H0 aceita (Homocedastico)
 
 library(car)
-leveneTest(Expo.area ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+leveneTest(Area.lateral ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
 
 # Kruaskal-Wallis test:
 
-kruskal.test(Expo.area ~ Site,
+kruskal.test(Area.lateral ~ Site,
              data = data) # H0 aceita, nao ha diferenca entre praias
 
 # ~Cov.Flu ####
+mean(data$Cov.Flu)
+sd(data$Cov.Flu)
 tapply(data$Cov.Flu,data$fSite,mean)
 tapply(data$Cov.Flu,data$fSite,sd)
 
@@ -515,7 +543,13 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
+boxplot(Cov.Flu ~ Site,
+        data = data)
 
+# ~Cov.UNFlu ####
+
+tapply(data$Cov.DeathCCAPey,data$Site,mean)
+tapply(data$Cov.DeathCCAPey,data$Site,sd)
 
 # ~Cov.Asc ####
 tapply(data$Cov.Asc,data$fSite,mean)
@@ -569,7 +603,8 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
-
+boxplot(Cov.Asc ~ Site,
+        data = data)
 
 # ~Cov.Bryo ####
 tapply(data$Cov.Bryo,data$fSite,mean)
@@ -654,7 +689,8 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
-
+boxplot(Cov.Spong ~ Site,
+           data = data)
 
 
 # 5. Outliers Y & X ?
@@ -853,7 +889,7 @@ leveneTest(Chiton_F ~ fSite, data=data, center=mean)
 
 # Var.abioticas primeiro
 head(data)
-pairs(data[,c(2:7)])
+pairs(data[,c(2:8)])
 
 # Funcao encontrada no help da funcao 'pairs' para plotar histogramas
 panel.hist <- function(x, ...)
@@ -867,15 +903,15 @@ panel.hist <- function(x, ...)
 }
 
 # Agora plotamos com histograma nos paineis diagonais
-pairs(data[,c(2:7)], diag.panel=panel.hist)
+pairs(data[,c(2:8)], diag.panel=panel.hist)
 
-# Outra funcao para fornecer os coeficientes de correlacao
+# Outra funcao para fornecer os coeficientes de correlacao ("KENDALL")
 # com a fonte proporcional ao indice
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
   usr <- par("usr"); on.exit(par(usr))
   par(usr = c(0, 1, 0, 1))
-  r <- cor(x, y)
+  r <- cor(x, y, method = "kendall")
   txt <- format(c(r, 0.123456789), digits = digits)[1]
   txt <- paste0(prefix, txt)
   if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
@@ -883,10 +919,10 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 }
 
 # Agora plotamos com indices de correlacao e histogramas
-pairs(data[,c(2:7)], diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(2:8)], diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Incluimos tambem a linha de suavizacao
-pairs(data[,c(2:7)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(2:8)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Temos uma Correlacao Positiva entre Weight X Expo.area (0.54)
 # Temos uma Correlacao Positiva entre Weight X Samp.time (0.50)
@@ -894,9 +930,16 @@ pairs(data[,c(2:7)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=pane
 # Temos uma Correlacao Negativa fraca entre Temp X Wt.level (-0.32)
 
 
-# Vamos ver as coberturas laterais...
+cor.test(data$Temp,data$Wt.level, method = "k")
 
-pairs(data[,c(2,8:13)])
+cor.test(data$Samp.time,data$Weight, method = "k")
+
+
+cor.test(data$Samp.time,data$Chiton_F, method = "k")
+
+# Vamos ver as coberturas laterais...
+head(data)
+pairs(data[,c(2,8:14)])
 
 # Funcao encontrada no help da funcao 'pairs' para plotar histogramas
 panel.hist <- function(x, ...)
@@ -910,7 +953,7 @@ panel.hist <- function(x, ...)
 }
 
 # Agora plotamos com histograma nos paineis diagonais
-pairs(data[,c(2,8:13)], diag.panel=panel.hist)
+pairs(data[,c(2,8:14)], diag.panel=panel.hist)
 
 # Outra funcao para fornecer os coeficientes de correlacao
 # com a fonte proporcional ao indice
@@ -918,7 +961,7 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
   usr <- par("usr"); on.exit(par(usr))
   par(usr = c(0, 1, 0, 1))
-  r <- cor(x, y)
+  r <- cor(x, y, method = "kendall")
   txt <- format(c(r, 0.123456789), digits = digits)[1]
   txt <- paste0(prefix, txt)
   if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
@@ -926,10 +969,10 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 }
 
 # Agora plotamos com indices de correlacao e histogramas
-pairs(data[,c(2,8:13)], diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(2,8:14)], diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Incluimos tambem a linha de suavizacao
-pairs(data[,c(2,8:13)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(2,8:14)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Correlacao entre: Cov.Flu x Cov.DeathCCAPey (-0.36)
 # Correlacao entre: Cov.Flu x Cov.Others (-0.71)
@@ -937,7 +980,7 @@ pairs(data[,c(2,8:13)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=p
 
 # Vamos em ver todas:
 x11()
-pairs(data[,c(3:13)])
+pairs(data[,c(3:14)])
 
 panel.hist <- function(x, ...)
 {
@@ -949,22 +992,22 @@ panel.hist <- function(x, ...)
   rect(breaks[-nB], 0, breaks[-1], y, col="cyan", ...)
 }
 
-pairs(data[,c(3:13)], diag.panel=panel.hist)
+pairs(data[,c(3:14)], diag.panel=panel.hist)
 
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
   usr <- par("usr"); on.exit(par(usr))
   par(usr = c(0, 1, 0, 1))
-  r <- cor(x, y)
+  r <- cor(x, y, method = "kendall")
   txt <- format(c(r, 0.123456789), digits = digits)[1]
   txt <- paste0(prefix, txt)
   if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
   text(0.5, 0.5, txt, cex = 1)
 }
 
-pairs(data[,c(3:13)], diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(3:14)], diag.panel=panel.hist, lower.panel=panel.cor)
 
-pairs(data[,c(3:13)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(3:14)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Correlacao entre: Temp x Cov.Spong (-0.32)
 # Correlacao entre: Wt.level x Cov.Others (-0.44)
@@ -974,70 +1017,191 @@ pairs(data[,c(3:13)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=pan
 
 # Para isso precisamos testar primero as normalidades
 
-shapiro.test(data$Expo.area) # Nao normal
-shapiro.test(data$Weight)   # Nao normal
-shapiro.test(data$Wt.level) # Nao normal
-shapiro.test(data$Temp)   # Nao normal
 shapiro.test(data$Samp.time) # Nao normal
+shapiro.test(data$Temp)   # Nao normal
+shapiro.test(data$Wt.level) # Nao normal
+shapiro.test(data$Weight)   # Nao normal
+shapiro.test(data$Area.total) # Nao normal
+shapiro.test(data$Area.lateral) # Nao normal
 shapiro.test(data$Cov.Flu) # Nao normal
 shapiro.test(data$Cov.DeathCCAPey) # Nao normal
-shapiro.test(data$Cov.Spong) # Nao normal
 shapiro.test(data$Cov.Others) # Nao normal
+shapiro.test(data$Cov.Asc) # Nao normal
+shapiro.test(data$Cov.Bryo) # Nao normal
+shapiro.test(data$Cov.Spong) # Nao normal
 
-# portanto....Correlacao de Spearman:
+# Kendall correlations:
 
-# 1. Weight X Expo.area (0.54):
-cor(data$Expo.area, data$Weight)
-cor.test(data$Expo.area, data$Weight, method= "spearman") # Significante
-plot(data$Expo.area, data$Weight)
-
-# 2. Weight X Samp.time (0.50)
-cor.test(data$Weight, data$Samp.time, method= "spearman") # Significante
-plot(data$Weight, data$Samp.time)
-
-# 3. Samp.time X Expo.area (0.38)
-cor.test(data$Expo.area, data$Samp.time, method= "spearman") # Significante
-plot(data$Expo.area, data$Samp.time)
-
-# 4. Temp X Wt.level (-0.32)
-cor.test(data$Temp, data$Wt.level, method= "spearman") # Significante
+# 1. Wt. level X Temp (-0.31)
+cor.test(data$Temp, data$Wt.level, method= "k") # p<0.001
 plot(data$Temp, data$Wt.level)
 
-# 5. Cov.Flu x Cov.DeathCCAPey (-0.36)
-cor.test(data$Cov.Flu, data$Cov.DeathCCAPey, method= "spearman") # Significante
+# 2. Samp.time X Weight (0.27)
+cor.test(data$Weight, data$Samp.time, method= "k") # p<0.001
+plot(data$Weight, data$Samp.time)
+
+# 3. Area.lateral  X Weight (0.39)
+cor.test(data$Weight, data$Area.lateral, method= "k") # p<0.001
+plot(data$Weight, data$Area.lateral)
+
+# 4. Area.lateral  X Samp. time (0.20)
+cor.test(data$Samp.time, data$Area.lateral, method= "k") # p<0.01
+plot(data$Sap.time, data$Area.lateral)
+
+# 5. Area.lateral  X Area.total (0.47)
+cor.test(data$Area.total, data$Area.lateral, method= "k") # p<0.001
+plot(data$Area.total, data$Area.lateral)
+
+# 6. Cov.Flu x Cov.DeathCCAPey (-0.27)
+cor.test(data$Cov.Flu, data$Cov.DeathCCAPey, method= "kendall") # p<0.001
 plot(data$Cov.Flu, data$Cov.DeathCCAPey)
 
-# 6. Cov.Flu x Cov.Others (-0.71)
-cor.test(data$Cov.Flu, data$Cov.Other, method= "spearman") # Significante
-plot(data$Cov.Flu, data$Cov.Other)
+# 7. Cov.Bryo x Cov.Asc (0.25)
+cor.test(data$Cov.Bryo, data$Cov.Asc, method= "k") # p<0.001
+plot(data$Cov.Bryo, data$Cov.Asc)
 
-# 7. Cov.Flu x Cov.Spong (-0.39)
-cor.test(data$Cov.Flu, data$Cov.Spong, method= "spearman") # Significante
-plot(data$Cov.Flu, data$Cov.Spong)
-
-# 8. Temp x Cov.Spong (-0.32)
-cor.test(data$Temp, data$Cov.Spong, method= "spearman") # Significante
+# 8. Temp x Cov.Spong (-0.20)
+cor.test(data$Temp, data$Cov.Spong, method= "k") # p<0.001
 plot(data$Temp, data$Cov.Spong)
 
-# 9. Wt.level x Cov.Others (-0.44)
-cor.test(data$Wt.level, data$Cov.Spong, method= "spearman") # NAO
-plot(data$Wt.level, data$Cov.Spong)
-
-# 10. Weight x Cov.Spong (0.32)
-cor.test(data$Weight, data$Cov.Spong, method= "spearman") # Significante
+# 9. Weight x Cov.Spong (0.29)
+cor.test(data$Weight, data$Cov.Spong, method= "k") # p<0.001
 plot(data$Weight, data$Cov.Spong)
 
-# Discritivo
-summary(data)
+# 10. Samp.time x Cov.Spong (0.22)
+cor.test(data$Samp.time, data$Cov.Spong, method= "k")  #p<0.01
+plot(data$Samp.time, data$Cov.Spong)
+
+# 11. Cov.Spong X Cov.Asc (0.28)
+cor.test(data$Cov.Spong, data$Cov.Asc, method= "k")  #p<0.001
+plot(data$Cov.Spong, data$Cov.Asc)
+
+# 12. Wt.level x Cov.Others (-0.35)
+cor.test(data$Wt.level, data$Cov.Others, method= "k") #p<0.001
+plot(data$Wt.level, data$Cov.Others)
+
+# 13. Cov.Flu x Cov.Others (-0.50)
+cor.test(data$Cov.Flu, data$Cov.Other, method= "k") #p<0.001
+plot(data$Cov.Flu, data$Cov.Other)
+
+# Vamos ver para a coocorrencia de invertebrados
+
+dim(data)
+
+x11()
+pairs(data[,c(15:29)])
+
+panel.hist <- function(x, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(usr[1:2], 0, 1.5) )
+  h <- hist(x, plot = FALSE)
+  breaks <- h$breaks; nB <- length(breaks)
+  y <- h$counts; y <- y/max(y)
+  rect(breaks[-nB], 0, breaks[-1], y, col="cyan", ...)
+}
+
+pairs(data[,c(3:14)], diag.panel=panel.hist)
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- cor(x, y, method = "kendall")
+  txt <- format(c(r, 0.123456789), digits = digits)[1]
+  txt <- paste0(prefix, txt)
+  if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+  text(0.5, 0.5, txt, cex = 1)
+}
+
+pairs(data[,c(3:14)], diag.panel=panel.hist, lower.panel=panel.cor)
+
+pairs(data[,c(3:14)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+# ~ Macrofauna ####
+
+# Tranformando a matriz de macrofauna em presenca/ausencia.
+
+dim(macro)
+str(macro)
+library(vegan)
+spe.pa <- decostand(macro[,15:37], method="pa")
+str(spe.pa)
+dim(spe.pa)
+macro.pa <- c(macro [,1:14],spe.pa)
+str(macro.pa)
+dim(macro.pa)
+
+# ~Bryozoans ####
+sum(macro.pa$Bryo) # 37
+tapply(macro.pa$Bryo,macro.pa$Site,sum)
+
+# ~Ascidians ####
+sum(macro.pa$Asci) # 98
+tapply(macro.pa$Asci,macro.pa$Site,sum)
+
+# ~Bivalves ####
+sum(macro.pa$Bival) # 3
+tapply(macro.pa$Bival,macro.pa$Site,sum)
+
+# ~Crabs ####
+sum(macro.pa$Crabs) # 14 occurence
+tapply(macro.pa$Crabs,macro.pa$Site,sum)
+
+sum(macro$Crabs) # 15 abundance
+tapply(macro$Crabs,macro$Site,sum)
+
+# ~Polychaetes ####
+sum(macro.pa$Worm) # 17 occurence
+tapply(macro.pa$Worm,macro.pa$Site,sum)
+
+sum(macro$Worms) # 17 abundance
+tapply(macro$Worms,macro$Site,sum)
+
+# ~Sponges ####
+sum(macro.pa$Spong) # 65
+tapply(macro.pa$Spong,macro.pa$Site,sum)
+
+# ~Zoanthus ####
+sum(macro.pa$Zoanthus) # 10
+tapply(macro.pa$Zoanthus,macro.pa$Site,sum)
+
+# ~Sponges ####
+sum(macro.pa$Spong) # 65
+tapply(macro.pa$Spong,macro.pa$Site,sum)
+
+# ~Hermit ####
+sum(macro.pa$Hermit) # 9 occurence
+tapply(macro.pa$Hermit,macro.pa$Site,sum)
+
+sum(macro$Hermit) # 14 abundance
+tapply(macro$Hermit,macro$Site,sum)
+
+# ~Gastropods ####
+sum(macro.pa$Gastrop) # 62 occurence
+tapply(macro.pa$Gastrop,macro.pa$Site,sum)
+
+sum(macro$Gastrop) # 178 abundance
+tapply(macro$Gastrop,macro$Site,sum)
+
+# ~Fissu ####
+sum(macro.pa$Fissu) # 38 occurence
+tapply(macro.pa$Fissu,macro.pa$Site,sum)
+
+sum(macro$Fissu) # 114 abundance
+tapply(macro$Fissu,macro$Site,sum)
+
+# ~T.viri ####
+sum(macro.pa$T.viri) # 17 occurence
+tapply(macro.pa$T.viri,macro.pa$Site,sum)
+
+sum(macro$T.viri) # 22 abundance
+tapply(macro$T.viri,macro$Site,sum)
 
 
-
-aggregate(data$Samp.time, list(data$Site), FUN=mean)
-
-anova(aov(Samp.time ~ Site, data=data))
-TukeyHSD(aov(Samp.time ~ Site, data=data),ordered=T)
 
 # ~ Diagnostico ####
+# REFAZER
 
 # - Nao ha dados faltantes
 # - Zero inflado!
@@ -1049,6 +1213,9 @@ TukeyHSD(aov(Samp.time ~ Site, data=data),ordered=T)
 #   + Cov.Flu x Cov.Spong (-0.39)
 #   + Weight x Expo.area (0.54)
 #   + Temp. X Wt.level (-0.32)
+
+
+
 
 
 # PCA ####
@@ -1178,17 +1345,18 @@ env.std.pca
 
 
 
-# MODELOS
+# MODELING ####
 ## At boulder side ####
 
-# O objetivo eh investigar se a abundancia de quitons fluorescentes ('Chiton_F') eh influenciada por fatores ambientais e bióticos
-# presentes/ atuantes na escala espacial da lateral da rocha no quais os quítons habitam.
+# O objetivo eh investigar se a abundancia de quitons fluorescentes ('Chiton_F')
+# eh influenciada por fatores ambientais e bióticos presentes/ atuantes na escala
+# espacial da lateral da rocha no quais os quítons habitam.
 
-# Hipótese: eh que a cobertura de substratos fluorescentes (cca+peyssonnelia) será um fator importante para explica a distribuição spacial dos quítons fluorescentes.
+# Hipótese: eh que a cobertura de substratos fluorescentes (cca+peyssonnelia) será um fator importante para explica a abund^ncia dos quítons fluorescentes.
 
-data <- read.csv("rockside.csv", sep=";",dec=".", header=T)
-str(data)
-data$fSite <- factor(data$Site)
+macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
+str(macro)
+data$fSite <- factor(macro$Site)
 
 ## 1° Formula ####
 # Considerando apenas os parametros ambientais e cobertura do substrato:
@@ -2294,3 +2462,12 @@ B1 <- glm(fsubst~time+ftreat+forient, family=binomial, data=data)
 summary(B1)
 
 
+#CODIGOS SOLTOS ####
+
+# Discritivo
+summary(data)
+
+aggregate(data$Samp.time, list(data$Site), FUN=mean)
+
+anova(aov(Samp.time ~ Site, data=data))
+TukeyHSD(aov(Samp.time ~ Site, data=data),ordered=T)
