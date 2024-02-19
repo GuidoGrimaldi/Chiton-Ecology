@@ -693,137 +693,6 @@ boxplot(Cov.Spong ~ Site,
            data = data)
 
 
-# 5. Outliers Y & X ?
-
-# A ferramenta grafica tipica utilizada para deteccao de outliers eh o boxplot.
-
-# Vamos analisar por partes:
-# Quitons:
-boxplot(data$Chiton_F)
-
-# Coberturas:
-boxplot(data[,c(8:13)])
-
-# Abiotics:
-boxplot(data[,c(4:7)])
-
-# All:
-boxplot(data[,c(2:13)])
-
-head(data)
-# Vamos examinar um pouco mais atraves do 'cleveland dotplot':
-x11()
-par(mfrow= c (4,4))
-
-library(lattice)
-Z <- cbind(data$Chiton_F,
-           data$Samp.time,
-           data$Temp,
-           data$Wt.level,
-           data$Weight,
-           data$Expo.area)
-
-colnames(Z) <- c("Chiton F",
-                 "Samp.time",
-                 "Temp",
-                 "Wt.level",
-                 "Weight",
-                 "Expo.area")
-
-dotplot(as.matrix(Z), groups = FALSE,
-        strip = strip.custom(bg = 'white',
-                             par.strip.text = list(cex = 0.8)),
-        scales = list(x = list(relation = "free"),
-                      y = list(relation = "free"),
-                      draw = FALSE),
-        col = 1, cex  = 0.5, pch = 16,
-        xlab = "Value of the variable",
-        ylab = "Order of the data")
-
-# Uhh...parece haver um outlier em Samp.time
-
-Z <- cbind(data$Cov.Flu,
-           data$Cov.DeathCCAPey,
-           data$Cov.Others,
-           data$Cov.Asc,
-           data$Cov.Bryo,
-           data$Cov.Spong)
-
-colnames(Z) <- c("Cov.Fluo",
-                 "Cov.DeathCCAPey",
-                 "Cov.Others",
-                 "Cov.Asci",
-                 "Cov.Bryo",
-                 "Cov.Spong")
-
-dotplot(as.matrix(Z), groups = FALSE,
-        strip = strip.custom(bg = 'white',
-                             par.strip.text = list(cex = 0.8)),
-        scales = list(x = list(relation = "free"),
-                      y = list(relation = "free"),
-                      draw = FALSE),
-        col = 1, cex  = 0.5, pch = 16,
-        xlab = "Value of the variable",
-        ylab = "Order of the data")
-
-
-# Boxplots condicionados por praia
-boxplot(Weight ~ Site,data=data)
-boxplot(Weight ~ Site, varwidth = TRUE, data=data)
-boxplot(Temp ~ Site, varwidth = TRUE, data=data)
-boxplot(Wt.level ~ Site, varwidth = TRUE, data=data)
-boxplot(Expo.area ~ Site, varwidth = TRUE, data=data)
-boxplot(Samp.time ~ Site, varwidth = TRUE, data=data)
-boxplot(Cov.Flu ~ Site, varwidth = TRUE, data=data)
-boxplot(Cov.DeathCCAPey ~ Site, varwidth = TRUE, data=data)
-boxplot(Cov.Asc ~ Site, varwidth = TRUE, data=data)
-boxplot(Cov.Spong ~ Site, varwidth = TRUE, data=data)
-boxplot(Cov.Bryo ~ Site, varwidth = TRUE, data=data)
-boxplot(Rug.base ~ Site, varwidth = TRUE, data=data)
-tapply(data$Rug.base,data$f.Site,sum)
-boxplot(Brittle ~ Site, varwidth = TRUE, data=data)
-tapply(data$Brittle,data$f.Site,sum)
-
-library(beeswarm)
-beeswarm::beeswarm(Weight ~ Site,data=data)
-beeswarm::beeswarm(Temp ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Wt.level ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Expo.area ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Samp.time ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Flu ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.DeathCCAPey ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Asc ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Spong ~ Site,data=data, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Bryo ~ Site,data=data, col="red", pch=16, method="swarm")
-
-
-stripchart(Weight ~ Site,data=data, method="stack")
-stripchart(Temp ~ Site,data=data, method="stack")
-stripchart(Wt.level ~ Site,data=data, method="stack")
-stripchart(Expo.area ~ Site,data=data, method="stack")
-stripchart(Samp.time ~ Site,data=data, method="stack")
-stripchart(Cov.Flu ~ Site,data=data, method="stack")
-stripchart(Cov.DeathCCAPey ~ Site,data=data, method="stack")
-stripchart(Cov.Asc ~ Site,data=data, method="stack")
-stripchart(Cov.Spong ~ Site,data=data, method="stack")
-stripchart(Cov.Bryo ~ Site,data=data, method="stack")
-
-# Podemos observar a dispersao dos dados para cada praia
-# Ou com a funcao do pacote 'lattice' conseguimos ver a dispersao por praia
-library(lattice)
-xyplot(Chiton_F ~ Weight | Site, data=data)
-xyplot(Chiton_F ~ Weight | Site, data=data, type=c("p","r")) # com linha de regressao
-xyplot(Chiton_F ~ Temp | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Wt.level | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Expo.area | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Samp.time | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Flu | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.DeathCCAPey | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Asc | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Spong | Site, data=data, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Bryo | Site, data=data, type=c("p","r"))
-
-
 # 6. Homogeneity Y ?
 
 # Vamos verificar mais uma das premissas para a regressao linear.
@@ -883,7 +752,7 @@ leveneTest(Chiton_F ~ fSite, data=data, center=mean)
 
 # mesmo resultado usando a media. HETEROCEDASTICIDADE
 
-# 7. Relationship X & Y ?
+# 7. Relationship X & Y ? ####
 
 # Vamos analisar por partes:
 
@@ -1125,7 +994,7 @@ pairs(data[,c(3:14)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=pan
 dim(macro)
 str(macro)
 library(vegan)
-spe.pa <- decostand(macro[,15:37], method="pa")
+spe.pa <- decostand(macro[,15:34], method="pa")
 str(spe.pa)
 dim(spe.pa)
 macro.pa <- c(macro [,1:14],spe.pa)
@@ -1139,6 +1008,21 @@ tapply(macro.pa$Bryo,macro.pa$Site,sum)
 # ~Ascidians ####
 sum(macro.pa$Asci) # 98
 tapply(macro.pa$Asci,macro.pa$Site,sum)
+
+mod.logistico <- glm(Asci~Site, family=binomial(link="logit"), data=macro.pa)	# ajustar o modelo logistico (family=binomial)
+summary(mod.logistico)
+anova(mod.logistico,test="Chisq")
+
+mod.logistico <- glm(Asci~Weight, family=binomial(link="logit"), data=macro.pa)	# ajustar o modelo logistico (family=binomial)
+summary(mod.logistico)
+anova(mod.logistico,test="Chisq")
+
+plot(macro.pa$Asci~macro.pa$Weight, pch=16,
+     xlab="Reefs", ylab="Presence of ascidians")
+
+probabilidade <- exp(predict(mod.logistico)) / (1+exp(predict(mod.logistico))) # converter os valores preditos no modelo logit para probabilidades
+lines(probabilidade~macro.pa$Weight, lwd=2, lty=2)
+
 
 # ~Bivalves ####
 sum(macro.pa$Bival) # 3
@@ -1197,7 +1081,6 @@ tapply(macro.pa$T.viri,macro.pa$Site,sum)
 
 sum(macro$T.viri) # 22 abundance
 tapply(macro$T.viri,macro$Site,sum)
-
 
 
 # ~ Diagnostico ####
@@ -1346,67 +1229,478 @@ env.std.pca
 
 
 # MODELING ####
-## At boulder side ####
+
+## Percentage cover at boulder side ##
 
 # O objetivo eh investigar se a abundancia de quitons fluorescentes ('Chiton_F')
-# eh influenciada por fatores ambientais e bióticos presentes/ atuantes na escala
-# espacial da lateral da rocha no quais os quítons habitam.
+# eh influenciada pelo tipo de substrato que recobre a lateral dos boulders que
+# os chitons habitam.
 
-# Hipótese: eh que a cobertura de substratos fluorescentes (cca+peyssonnelia) será um fator importante para explica a abund^ncia dos quítons fluorescentes.
+# Hipótese: maior cobertura de substratos fluorescentes (cca+peyssonnelia),
+# maiores as são as abundancias dos quítons fluorescentes.
 
 macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
 str(macro)
-data$fSite <- factor(macro$Site)
+macro$fSite <- factor(macro$Site)
 
-## 1° Formula ####
-# Considerando apenas os parametros ambientais e cobertura do substrato:
+# Variable Y: Chiton_F
+# Variables X: Area.lateral,Cov.Flu,Cov.Asc,Cov.Bryo,Cov.Spong,Cov.Others)
+# Offset: Samp.time
+# Random factor: fSite
 
+## Exploring variables ##
+
+Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others","Gastrop")]
+
+#install.packages("usdm")
+library(usdm)
+vif(Z)
+vifcor(Z)
+vifstep(Z, th=3,keep = "Cov.Flu") # Cov.Other excluded
+
+boxplot(macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")])
+
+pairs(macro[,c("Chiton_F","Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")],
+      panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+# Transformando Area.lateral
+macro$logArea.lateral <- log(macro$Area.lateral)
+str(macro)
+
+boxplot(macro[,c("logArea.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")])
+
+pairs(macro[,c("Chiton_F","logArea.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")],
+      panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+
+
+# A variavel "area.lateral" apresenta dimensoes muito maiores que as demais.
+
+dotplot(as.matrix(Z), groups = FALSE,
+        strip = strip.custom(bg = 'white',
+                             par.strip.text = list(cex = 0.8)),
+        scales = list(x = list(relation = "free"),
+                      y = list(relation = "free"),
+                      draw = FALSE),
+        col = 1, cex  = 0.5, pch = 16,
+        xlab = "Value of the variable",
+        ylab = "Order of the data")
+
+# Vamos anasila-la em isolado
+
+# Make the coplot
+coplot(Chiton_F ~ Cov.Bryo | Site, data=macro, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+library(beeswarm)
+beeswarm::beeswarm(Area.lateral ~ Site,data=macro)
+beeswarm::beeswarm(Area.lateral ~ Site,data=macro, col="red", pch=16, method="swarm")
+
+dotchart(macro$Area.lateral, main = "AREA", group = macro$fSite)
+
+stripchart(Area.lateral ~ Site,data=macro, method="stack")
+
+library(lattice)
+xyplot(Chiton_F ~ Area.lateral | Site, data=macro)
+xyplot(Chiton_F ~ Cov.Bryo | Site, data=macro, type=c("p","r"))
+
+xyplot(Area.lateral ~Cov.Flu| Site, data=macro, type=c("p","r"))
+
+
+# 1° Model ####
+
+str(macro)
 library(pscl)
-f1 <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.DeathCCAPey + Cov.Asc + Cov.Bryo + Cov.Spong + (1|fSite))
 
-# GLMM Poisson:
+f.full <- formula(Chiton_F ~ Area.lateral + Cov.Flu  + Cov.Asc + Cov.Bryo
+              + Cov.Spong + (1|fSite))
 
-# Modelo completo
+# GLMM Poisson
+
 library(glmmTMB)
-mod1 <- glmmTMB(f1,family = poisson, data=data)
+mod1 <- glmmTMB(f.full,family = poisson, data=macro)
 summary(mod1)
 
-drop1(mod1, test="Chi")
+drop1(mod1, test="Chi") # Cov. Asc
+f1 <- update(f.full,.~.-Cov.Asc)
 
-# Retirando o 'Cov.Asc' do Mod1, obtemos o modelo mod1a:
-f1a <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.DeathCCAPey + Cov.Bryo + Cov.Spong + (1|fSite))
-mod1a <- glmmTMB(f1a,family = poisson, data=data)
+mod1a <- glmmTMB(f1, family = poisson, data=macro)
 summary(mod1a)
-drop1(mod1a, test="Chi")
 
-# Retirando o 'Cov.DeathCCAPey' do Mod1a, obtemos o modelo Mod1b:
-f1b <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + Cov.Spong + (1|fSite))
-mod1b <- glmmTMB(f1b,family = poisson, data=data)
+drop1(mod1a, test="Chi") # Cov. Spong
+f2 <- update(f1,.~.-Cov.Spong)
+
+mod1b <- glmmTMB(f2, family = poisson, data=macro)
 summary(mod1b)
-drop1(mod1b, test="Chi")
 
-# Retirando o 'Cov.Spong' do Mod1b, obtemos o modelo Mod1c:
-f1c <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + (1|fSite))
-mod1c <- glmmTMB(f1c,family = poisson, data=data)
-summary(mod1c)
+### ~AIC Selection ####
+
+library(MuMIn)
+model.sel(mod1, mod1a, mod1b)
+anova(mod1, mod1a, mod1b, test="Chi")
+
+#install.packages("AICcmodavg")
+library(AICcmodavg)
+
+#setup a subset of models of Table 1
+Cand.models <- list(mod1, mod1a, mod1b)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+r.squaredGLMM(mod1b)
+
+### ~Model Validation ####
+
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod1b)
+plot(simulationOutput)
+
+# a. Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod1b,
+                            n = 1000)
+plot(simRes) # good
+
+# b Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,3))
+plotResiduals(simulationOutput, macro$Cov.Flu)
+plotResiduals(simulationOutput, macro$Cov.Bryo)
+plotResiduals(simulationOutput, macro$Area.lateral)
+
+# c. Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+## CONCLUIDO ###
+
+
+
+
+
+
+
+
+
+
+# 2°P: GAMM ####
+install.packages("gamm4")
+library(gamm4)
+
+Mgamm <- gamm4(Chiton_F ~ offset(Samp.time) + Cov.Flu + Gastrop + Weight + logArea.lateral,
+                random= ~ (1|Site), data=macro, family=poisson)
+
+summary(Mgamm$gam)
+summary(Mgamm$mer)
+
+par(mfrow=c(1,1))
+plot(Mgamm$gam)
+
+ResGam4 <- resid(Mgamm$gam, type="pearson")
+Resmer <- resid(Mgamm$mer, type="deviance")
+
+plot(ResGam4 ~ macro$Cov.Flu, xlab="Arrival time",
+     ylab="Pearson residuals (Fixed)")
+plot(Resmer ~ macro$Cov.Flu, xlab="Arrival time",
+     ylab="Deviance residuals (Random)")
+
+
+#===============#
+
+# 5. Outliers Y & X ?
+
+# A ferramenta grafica tipica utilizada para deteccao de outliers eh o boxplot.
+
+# Vamos analisar por partes:
+# Quitons:
+par(mfrow = c(1,1))
+boxplot(macro$Chiton_F)
+
+# Coberturas:
+boxplot(macro[,c(8:13)])
+
+# Abiotics:
+boxplot(macro[,c(4:7)])
+
+# All:
+boxplot(macro[,c(2:13)])
+
+head(macro)
+# Vamos examinar um pouco mais atraves do 'cleveland dotplot':
+x11()
+par(mfrow= c (4,4))
+
+library(lattice)
+Z <- cbind(macro$Chiton_F,
+           macro$Samp.time,
+           macro$Temp,
+           macro$Wt.level,
+           macro$Weight,
+           macro$Expo.area)
+
+colnames(Z) <- c("Chiton F",
+                 "Samp.time",
+                 "Temp",
+                 "Wt.level",
+                 "Weight",
+                 "Expo.area")
+
+
+
+# Uhh...parece haver um outlier em Samp.time
+
+Z <- cbind(macro$Cov.Flu,
+           macro$Cov.DeathCCAPey,
+           macro$Cov.Others,
+           macro$Cov.Asc,
+           macro$Cov.Bryo,
+           macro$Cov.Spong)
+
+colnames(Z) <- c("Cov.Fluo",
+                 "Cov.DeathCCAPey",
+                 "Cov.Others",
+                 "Cov.Asci",
+                 "Cov.Bryo",
+                 "Cov.Spong")
+
+dotplot(as.matrix(Z), groups = FALSE,
+        strip = strip.custom(bg = 'white',
+                             par.strip.text = list(cex = 0.8)),
+        scales = list(x = list(relation = "free"),
+                      y = list(relation = "free"),
+                      draw = FALSE),
+        col = 1, cex  = 0.5, pch = 16,
+        xlab = "Value of the variable",
+        ylab = "Order of the data")
+
+
+# Boxplots condicionados por praia
+boxplot(Weight ~ Site,data=macro)
+boxplot(Weight ~ Site, varwidth = TRUE, data=macro)
+boxplot(Temp ~ Site, varwidth = TRUE, data=macro)
+boxplot(Wt.level ~ Site, varwidth = TRUE, data=macro)
+boxplot(Expo.area ~ Site, varwidth = TRUE, data=macro)
+boxplot(Samp.time ~ Site, varwidth = TRUE, data=macro)
+boxplot(Cov.Flu ~ fSite, varwidth = TRUE, data=macro)
+boxplot(Cov.DeathCCAPey ~ Site, varwidth = TRUE, data=macro)
+boxplot(Cov.Asc ~ Site, varwidth = TRUE, data=macro)
+boxplot(Cov.Spong ~ Site, varwidth = TRUE, data=macro)
+boxplot(Cov.Bryo ~ Site, varwidth = TRUE, data=macro)
+boxplot(Rug.base ~ Site, varwidth = TRUE, data=macro)
+tapply(macro$Rug.base,macro$f.Site,sum)
+boxplot(Brittle ~ Site, varwidth = TRUE, data=macro)
+tapply(macro$Brittle,macro$f.Site,sum)
+
+library(beeswarm)
+beeswarm::beeswarm(Weight ~ Site,data=macro)
+beeswarm::beeswarm(Temp ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Wt.level ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Expo.area ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Samp.time ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Cov.Flu ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Cov.DeathCCAPey ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Cov.Asc ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Cov.Spong ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Cov.Bryo ~ Site,data=macro, col="red", pch=16, method="swarm")
+
+dotchart(macro$Weight, main = "AREA", group = macro$fSite)
+stripchart(Weight ~ Site,data=macro, method="stack")
+stripchart(Temp ~ Site,data=macro, method="stack")
+stripchart(Wt.level ~ Site,data=macro, method="stack")
+stripchart(Expo.area ~ Site,data=macro, method="stack")
+stripchart(Samp.time ~ Site,data=macro, method="stack")
+stripchart(Cov.Flu ~ Site,data=macro, method="stack")
+stripchart(Cov.DeathCCAPey ~ Site,data=macro, method="stack")
+stripchart(Cov.Asc ~ Site,data=macro, method="stack")
+stripchart(Cov.Spong ~ Site,data=macro, method="stack")
+stripchart(Cov.Bryo ~ Site,data=macro, method="stack")
+
+# Podemos observar a dispersao dos dados para cada praia
+# Ou com a funcao do pacote 'lattice' conseguimos ver a dispersao por praia
+library(lattice)
+xyplot(Chiton_F ~ Weight | Site, data=macro)
+xyplot(Chiton_F ~ Weight | Site, data=macro, type=c("p","r")) # com linha de regressao
+xyplot(Chiton_F ~ Temp | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Wt.level | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Expo.area | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Samp.time | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Cov.Flu | fSite, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Cov.DeathCCAPey | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Cov.Asc | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Cov.Spong | Site, data=macro, type=c("p","r"))
+xyplot(Chiton_F ~ Cov.Bryo | Site, data=macro, type=c("p","r"))
+
+
+#========
+
+# Corvif fuction
+
+#Library files for courses provided by: Highland Statistics Ltd.
+#To cite these functions, use:
+#Mixed effects models and extensions in ecology with R. (2009).
+#Zuur, AF, Ieno, EN, Walker, N, Saveliev, AA, and Smith, GM. Springer.
+
+#Copyright Highland Statistics LTD.
+
+#####################################################################
+#VIF FUNCTION.
+#To use:  corvif(YourDataFile)
+corvif <- function(dataz) {
+  dataz <- as.data.frame(dataz)
+  #correlation part
+  #cat("Correlations of the variables\n\n")
+  #tmp_cor <- cor(dataz,use="complete.obs")
+  #print(tmp_cor)
+
+  #vif part
+  form    <- formula(paste("fooy ~ ",paste(strsplit(names(dataz)," "),collapse=" + ")))
+  dataz   <- data.frame(fooy=1,dataz)
+  lm_mod  <- lm(form,dataz)
+
+  cat("\n\nVariance inflation factors\n\n")
+  print(myvif(lm_mod))
+}
+
+
+#Support function for corvif. Will not be called by the user
+myvif <- function(mod) {
+  v <- vcov(mod)
+  assign <- attributes(model.matrix(mod))$assign
+  if (names(coefficients(mod)[1]) == "(Intercept)") {
+    v <- v[-1, -1]
+    assign <- assign[-1]
+  } else warning("No intercept: vifs may not be sensible.")
+  terms <- labels(terms(mod))
+  n.terms <- length(terms)
+  if (n.terms < 2) stop("The model contains fewer than 2 terms")
+  if (length(assign) > dim(v)[1] ) {
+    diag(tmp_cor)<-0
+    if (any(tmp_cor==1.0)){
+      return("Sample size is too small, 100% collinearity is present")
+    } else {
+      return("Sample size is too small")
+    }
+  }
+  R <- cov2cor(v)
+  detR <- det(R)
+  result <- matrix(0, n.terms, 3)
+  rownames(result) <- terms
+  colnames(result) <- c("GVIF", "Df", "GVIF^(1/2Df)")
+  for (term in 1:n.terms) {
+    subs <- which(assign == term)
+    result[term, 1] <- det(as.matrix(R[subs, subs])) * det(as.matrix(R[-subs, -subs])) / detR
+    result[term, 2] <- length(subs)
+  }
+  if (all(result[, 2] == 1)) {
+    result <- data.frame(GVIF=result[, 1])
+  } else {
+    result[, 3] <- result[, 1]^(1/(2 * result[, 2]))
+  }
+  invisible(result)
+}
+
+#END VIF FUNCTIONS
+
+Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")]
+corvif(Z)
+#install.packages("usdm")
+library(usdm)
+vif(Z)
+vifcor(Z)
+vifstep(Z)
+
+Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")]
+corvif(Z)
+
+
+drop1(mod1, test="Chi") # Cov.Others
+
+mod2 <- update(mod1,.~.-Cov.Others)
+summary(mod2)
+
+
+# Negaive Binomial
+
+f2 <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Asc + Cov.Bryo + Cov.Spong + offset(Samp.time) + (1|fSite))
+
+library(glmmTMB)
+nb1 <- glm(f2,family = binomial, data=macro)
+summary(nb1)
+
+drop1(nb1, test="Chi") # Cov.flu
+
+nb2 <- update(nb1,.~.-Cov.Flu)
+summary(nb2)
+
+drop1(nb2, test="Chi")
+
+nb3 <- update(nb2,.~.-Cov.Asc)
+summary(nb3)
+
+# Validacao:
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = nb1)
+plot(simulationOutput)
+
+
+
+# ZEro inflated - NB
+
+poiZi1 <- glmmTMB(f2,family = nbinom1, zi=~Chiton_F, data=macro)
+summary(poiZi1)
+
+simulationOutput <- simulateResiduals(fittedModel = poiZi1)
+plot(simulationOutput)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = poiZi1,
+                            n = 1000)
+plot(simRes) # good
+
+
+poiZi1 <- glmmTMB(f2,family = poisson, zi=~., data=macro)
+summary(poiZi1)
+
+simulationOutput <- simulateResiduals(fittedModel = poiZi1)
+plot(simulationOutput)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = poiZi1,
+                            n = 1000)
+plot(simRes) # good
+
 
 # Vamos comparar os modelos:
 
 library(MuMIn)
-model.sel(mod1, mod1a, mod1b, mod1c)
+model.sel(mod1, mod2, mod3, mod4) # mod4
 
 # vendo a diferenca entre os modelos pela ANOVA:
-anova(mod1, mod1a, mod1b, mod1c)
+anova(mod1, mod2, mod3, mod4)
 
-# Podemos considerar tanto o mod1c cquanto o mod1b, mas vamos coniderar o mod1c por ter o maior peso na explicação os modelos e ser o mais parcimonioso
+# R2
+r.squaredGLMM(mod4)
 
-r.squaredGLMM(mod1c)
-
-install.packages("AICcmodavg")
+#install.packages("AICcmodavg")
+detach(MuMIn)
 library(AICcmodavg)
 
-#setup a subset of models of Table 1
-Cand.models <- list(mod1, mod1a, mod1b, mod1c)
+# setup a subset of models of Table 1
+Cand.models <- list(mod1, mod2, mod3, mod4)
 
 ##create a vector of names to trace back models in set
 Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
@@ -1423,12 +1717,12 @@ print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
 # Calculo da inflacao da variancia para fatores lineares vif - fator de inflacao - menor que 3
 
 library(car)
-vif(mod1c)
+vif(mod4) # Nao deu certo
 
 # Validacao:
-install.packages("DHARMa")
+#install.packages("DHARMa")
 library(DHARMa)
-simulationOutput <- simulateResiduals(fittedModel = mod1c)
+simulationOutput <- simulateResiduals(fittedModel = mod4)
 plot(simulationOutput)
 
 # Teste para inflacao de zero
@@ -1438,14 +1732,125 @@ testZeroInflation(simulationOutput)
 
 testUniformity(simulationOutput = simulationOutput)
 par(mfrow = c(1,2))
-plotResiduals(simulationOutput, data$Cov.Flu)
-plotResiduals(simulationOutput, data$Area.lateral)
+plotResiduals(simulationOutput, data$Cov.Bryo)
+plotResiduals(simulationOutput, data$Area.total)
 
 # Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod1c,
+simRes <- simulateResiduals(fittedModel = mod4,
                             n = 1000)
 plot(simRes) # good
 
+# MODELO AJUSTADO COM POISSON!!!!
+# Prinipais variáveis
+
+
+# Load necessary libraries
+library(MASS)
+
+# Generate example data
+set.seed(123)
+n <- 100
+covariate <- rbeta(n, shape1 = 2, shape2 = 2)  # Generating covariate following beta distribution
+predictor <- rnorm(n)  # Generating predictor variable (just a random normal distribution for demonstration)
+response <- 3 + 2 * covariate + rnorm(n)  # Generating response variable (linear relationship with covariate)
+
+# Fit linear regression model with beta-distributed covariate
+model <- lm(response ~ covariate + predictor)
+
+# Summarize model
+summary(model)
+
+# Plot data and fitted model
+plot(covariate, response, main = "Linear Regression with Beta-Distributed Covariate", xlab = "Covariate", ylab = "Response")
+abline(model, col = "red")
+
+
+
+## 1° Formula ####
+# Considerando apenas os parametros ambientais e cobertura do substrato:
+
+library(pscl)
+f1 <- formula(Chiton_F ~ Area.total + Wt.level + Weight + Cov.Flu + Cov.Bryo + Cov.Spong + (1|fSite))
+
+# GLMM Poisson:
+# Modelo completo
+library(glmmTMB)
+mod1 <- glmmTMB(f1,family = poisson, data=macro)
+summary(mod1)
+
+drop1(mod1, test="Chi") # Cov.Flu
+
+mod2 <- update(mod1,.~.-Cov.Flu)
+summary(mod2)
+
+drop1(mod2, test="Chi")
+
+mod3 <- update(mod2,.~.-Cov.Spong)
+summary(mod3)
+
+drop1(mod3, test="Chi")
+
+mod4 <- update(mod3,.~.-Weight)
+summary(mod4)
+
+# Vamos comparar os modelos:
+
+library(MuMIn)
+model.sel(mod1, mod2, mod3, mod4) # mod4
+
+# vendo a diferenca entre os modelos pela ANOVA:
+anova(mod1, mod2, mod3, mod4)
+
+# R2
+r.squaredGLMM(mod4)
+
+#install.packages("AICcmodavg")
+detach(MuMIn)
+library(AICcmodavg)
+
+# setup a subset of models of Table 1
+Cand.models <- list(mod1, mod2, mod3, mod4)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+
+#Vamos analisar o vif do modelo:
+# Calculo da inflacao da variancia para fatores lineares vif - fator de inflacao - menor que 3
+
+library(car)
+vif(mod4) # Nao deu certo
+
+# Validacao:
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod4)
+plot(simulationOutput)
+
+# Teste para inflacao de zero
+testZeroInflation(simulationOutput)
+
+# b. Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,2))
+plotResiduals(simulationOutput, data$Cov.Bryo)
+plotResiduals(simulationOutput, data$Area.total)
+
+# Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod4,
+                            n = 1000)
+plot(simRes) # good
+
+# MODELO AJUSTADO COM POISSON!!!!
+# Prinipais variáveis
 
 ## 2° Formula ####
 # Considerando a presença de esécies de outros taxons na lateral da rocha:
