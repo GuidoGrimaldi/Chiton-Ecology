@@ -5,6 +5,17 @@
 # Script for: "chitons.eco.data"
 #++++++++++++++++++++++++#
 
+#install.packages("usethis")
+usethis::create_project("~/Documents/R sessions/Chiton Ecology/")
+
+# GIT & GITHUB ####
+
+usethis::use_git() # 2 "Yeah" / 3 "Yes"
+
+# gitcreds::gitcreds_set() # Cole o Token. Basta uma unica vez
+
+usethis::use_github()
+
 # Packages ####
 install.packages("MuMIn")
 library(DHARMa) # To validate model
