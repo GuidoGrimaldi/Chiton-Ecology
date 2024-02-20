@@ -1241,8 +1241,9 @@ env.std.pca
 
 # MODELING ####
 
-## Percentage cover at boulder side ##
+# ~at side scale ####
 
+## 1° Model ####
 # O objetivo eh investigar se a abundancia de quitons fluorescentes ('Chiton_F')
 # eh influenciada pelo tipo de substrato que recobre a lateral dos boulders que
 # os chitons habitam.
@@ -1256,7 +1257,6 @@ macro$fSite <- factor(macro$Site)
 
 # Variable Y: Chiton_F
 # Variables X: Area.lateral,Cov.Flu,Cov.Asc,Cov.Bryo,Cov.Spong,Cov.Others)
-# Offset: Samp.time
 # Random factor: fSite
 
 ## Exploring variables ##
@@ -1322,15 +1322,13 @@ xyplot(Chiton_F ~ Cov.Bryo | Site, data=macro, type=c("p","r"))
 xyplot(Area.lateral ~Cov.Flu| Site, data=macro, type=c("p","r"))
 
 
-# 1° Model ####
+### ~GLMM Poisson ####
 
 str(macro)
 library(pscl)
 
 f.full <- formula(Chiton_F ~ Area.lateral + Cov.Flu  + Cov.Asc + Cov.Bryo
               + Cov.Spong + (1|fSite))
-
-# GLMM Poisson
 
 library(glmmTMB)
 mod1 <- glmmTMB(f.full,family = poisson, data=macro)
@@ -1398,6 +1396,276 @@ testZeroInflation(simulationOutput)
 
 ## CONCLUIDO ###
 
+## 2° Model ####
+
+# O objetivo eh investigar se eh possivel determinar a abundância dos quítons com
+# base na presença de outros grupos de taxons na lateral da rocha evidando assim
+# o explorador a necessiade de turn over da rocha para possível contatação.
+
+# Hipótese: a presença de fissurelideos é um forte inicativo de maiores abundância
+# de quiton I.pectinata.
+
+# Variable Y: Chiton_F
+# Variables X: Area.lateral, Bryo, Asci, Bival, Crabs, Shrimp, Worms, Spong,
+# Urchins, Brittle, Coral, Zoanthus,Flatworm, Hermit, Fissu.
+# Random factor: fSite
+
+macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
+str(macro)
+
+
+# Tranformando os dados de abundancias de coespecies em presenca-ausencia:
+
+library(vegan) # decostand() function
+
+macro.pa <- decostand(macro[,15:29], "pa")
+macro.pa <- cbind(macro[,1:14],macro.pa)
+str(macro.pa)
+macro.pa$fSite <- factor(macro.pa$Site)
+
+## Exploring variables ##
+
+Z<-macro.pa[,c("Area.lateral","Bryo","Asci","Bival","Crabs","Shrimp","Worms","Spong",
+            "Urchins","Brittle","Coral","Zoanthus","Flatworm","Hermit","Fissu")]
+
+#install.packages("usdm")
+library(usdm)
+vif(Z)
+vifcor(Z)
+
+dotchart(Z$Fissu) # weight no eixo x
+plot(Z$Fissu)  # Compare com a funcao generica 'plot'
+plot(density(Z$Fissu))
+plot(table(Z$Fissu))
+plot()
+hist(Z$Fissu)
+stripchart(Fissu ~ Site,data=macro.pa, method="stack")
+library(beeswarm)
+beeswarm::beeswarm(Z$Fissu)
+beeswarm::beeswarm(Fissu ~ Site,data=macro.pa)
+beeswarm::beeswarm(Fissu ~ Site,data=macro.pa, col="red", pch=16, method="swarm")
+
+head(macro.pa[,-c(2:14)])
+class(macro.pa)
+
+macro.mx <- matrix(macro.pa[,-c(2:14)])
+class(macro.mx)
+dim(macro.mx)
+str(macro.mx)
+
+specie <- c("Bryo","Asci","Bival","Crabs","Shrimp","Worms","Spong",
+            "Urchins","Brittle","Coral","Zoanthus","Flatworm","Hermit","Fissu")
+
+
+library(pscl)
+f.full <- formula(Chiton_F ~ Bryo+Asci+Bival+Crabs+Shrimp+Worms+Spong+Urchins+
+                    Brittle+Coral+Zoanthus+Flatworm+Hermit+Fissu + (1|fSite))
+
+### ~GLMM Poisson ####
+
+library(glmmTMB)
+mod2 <- glmmTMB(f.full,family = poisson, data=macro.pa)
+summary(mod2)
+
+drop1(mod2, test="Chi") # Hermit
+f1 <- update(f.full,.~.-Hermit)
+mod2a <- glmmTMB(f1, family = poisson, data=macro.pa)
+summary(mod2a)
+
+drop1(mod2a, test="Chi") # Worms
+f2 <- update(f1,.~.-Worms)
+mod2b <- glmmTMB(f2, family = poisson, data=macro.pa)
+summary(mod2b)
+
+drop1(mod2b, test="Chi") # Coral
+f3 <- update(f2,.~.-Coral)
+mod2c <- glmmTMB(f3, family=poisson, data=macro.pa)
+summary(mod2c)
+
+drop1(mod2c, test="Chi") # Spong
+f4 <- update(f3,.~.-Spong)
+mod2d <- glmmTMB(f4, family=poisson, data=macro.pa)
+summary(mod2d)
+
+drop1(mod2d, test="Chi") # Asci
+f5 <- update(f4,.~.-Asci)
+mod2e <- glmmTMB(f5, family=poisson, data=macro.pa)
+summary(mod2e)
+
+drop1(mod2e, test="Chi") # Shrimp
+f6 <- update(f5,.~.-Shrimp)
+mod2f <- glmmTMB(f6, family=poisson, data=macro.pa)
+summary(mod2f)
+
+drop1(mod2f, test="Chi") # Bryo
+f7 <- update(f6,.~.-Bryo)
+mod2g <- glmmTMB(f7, family=poisson, data=macro.pa)
+summary(mod2g)
+
+drop1(mod2g, test="Chi") # Flatworm
+f8 <- update(f7,.~.-Flatworm)
+mod2h <- glmmTMB(f8, family=poisson, data=macro.pa)
+summary(mod2h)
+
+drop1(mod2h, test="Chi") # Bival
+f9 <- update(f8,.~.-Bival)
+mod2i <- glmmTMB(f9, family=poisson, data=macro.pa)
+summary(mod2i)
+
+drop1(mod2i, test="Chi") # Urchins
+f10 <- update(f9,.~.-Urchins)
+mod2j <- glmmTMB(f10, family=poisson, data=macro.pa)
+summary(mod2j)
+
+drop1(mod2j, test="Chi") # Zoanthus
+f11 <- update(f10,.~.-Zoanthus)
+mod2l <- glmmTMB(f11, family=poisson, data=macro.pa)
+summary(mod2l)
+
+#### + AIC Selection ####
+
+library(MuMIn)
+model.sel(mod2,mod2a,mod2b,mod2c,mod2d,mod2e,mod2f,mod2g,mod2h,mod2i,mod2j,mod2l)
+anova(mod2,mod2a,mod2b,mod2c,mod2d,mod2e,mod2f,mod2g,mod2h,mod2i,mod2j,mod2l, test="Chi")
+
+#install.packages("AICcmodavg")
+library(AICcmodavg)
+
+#setup a subset of models of Table 1
+Cand.models <- list(mod2,mod2a,mod2b,mod2c,mod2d,mod2e,mod2f,mod2g,mod2h,mod2i,mod2j,mod2l)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+r.squaredGLMM(mod2i)
+
+#### + Model Validation ####
+
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod2i)
+plot(simulationOutput) # Not ajusted
+
+# a. Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod2i,
+                            n = 1000)
+plot(simRes) # Not ajusted
+
+### ~GLMM nbinom1 ####
+
+library(glmmTMB)
+nb1 <- glmmTMB(f.full,family = nbinom1, data=macro.pa)
+summary(nb1)
+
+drop1(nb1, test="Chi") # Hermit
+f1 <- update(f.full,.~.-Hermit)
+nb2 <- glmmTMB(f1, family = nbinom1, data=macro.pa)
+summary(nb2)
+
+drop1(nb2, test="Chi") # Spong
+f2 <- update(f1,.~.-Spong)
+nb3 <- glmmTMB(f2, family = nbinom1, data=macro.pa)
+summary(nb3)
+
+drop1(nb3, test="Chi") # Worms
+f3 <- update(f2,.~.-Worms)
+nb4 <- glmmTMB(f3, family=nbinom1, data=macro.pa)
+summary(nb4)
+
+drop1(nb4, test="Chi") # Coral
+f4 <- update(f3,.~.-Coral)
+nb5 <- glmmTMB(f4, family=nbinom1, data=macro.pa)
+summary(nb5)
+
+drop1(nb5, test="Chi") # Asci
+f5 <- update(f4,.~.-Asci)
+nb6 <- glmmTMB(f5, family=nbinom1, data=macro.pa)
+summary(nb6)
+
+drop1(nb6, test="Chi") # Bival
+f6 <- update(f5,.~.-Bival)
+nb7 <- glmmTMB(f6, family=nbinom1, data=macro.pa)
+summary(nb7)
+
+drop1(nb7, test="Chi") # Shrimp
+f7 <- update(f6,.~.-Shrimp)
+nb8 <- glmmTMB(f7, family=nbinom1, data=macro.pa)
+summary(nb8)
+
+drop1(nb8, test="Chi") # Flatworm
+f8 <- update(f7,.~.-Flatworm)
+nb9 <- glmmTMB(f8, family=nbinom1, data=macro.pa)
+summary(nb9)
+
+drop1(nb9, test="Chi") # Bryo
+f9 <- update(f8,.~.-Bryo)
+nb10 <- glmmTMB(f9, family=nbinom1, data=macro.pa)
+summary(nb10)
+
+drop1(nb10, test="Chi") # Zoanthus
+f10 <- update(f9,.~.-Zoanthus)
+nb11 <- glmmTMB(f10, family=nbinom1, data=macro.pa)
+summary(nb11)
+
+drop1(nb11, test="Chi") # Brittle
+f11 <- update(f10,.~.-Brittle)
+nb12 <- glmmTMB(f11, family=nbinom1, data=macro.pa)
+summary(nb12)
+
+drop1(nb12, test="Chi") # Urchins
+f12 <- update(f11,.~.-Urchins)
+nb13 <- glmmTMB(f12, family=nbinom1, data=macro.pa)
+summary(nb13)
+
+#### + AIC Selection ####
+
+library(MuMIn)
+
+model.sel(nb1,nb2,nb3,nb4,nb5,nb6,nb7,nb8,nb9,nb10,nb11,nb12,nb13)
+anova(nb1,nb2,nb3,nb4,nb5,nb6,nb7,nb8,nb9,nb10,nb11,nb12,nb13, test="Chi")
+
+#install.packages("AICcmodavg")
+library(AICcmodavg)
+
+#setup a subset of models of Table 1
+Cand.models <- list(nb1,nb2,nb3,nb4,nb5,nb6,nb7,nb8,nb9,nb10,nb11,nb12,nb13)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+r.squaredGLMM(nb13)
+
+#### + Model Validation ####
+
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = nb13)
+plot(simulationOutput) # Ajusted
+
+# a. Randomizacoes:
+simRes <- simulateResiduals(fittedModel = nb13,
+                            n = 1000)
+plot(simRes) # Ajusted
+
+model.sel(mod2h,nb13) # nb13 menor AIC
+
+## CONCLUIDO ###
+
+# ~at boulder scale ####
 
 
 
@@ -1407,26 +1675,7 @@ testZeroInflation(simulationOutput)
 
 
 
-# 2°P: GAMM ####
-install.packages("gamm4")
-library(gamm4)
 
-Mgamm <- gamm4(Chiton_F ~ offset(Samp.time) + Cov.Flu + Gastrop + Weight + logArea.lateral,
-                random= ~ (1|Site), data=macro, family=poisson)
-
-summary(Mgamm$gam)
-summary(Mgamm$mer)
-
-par(mfrow=c(1,1))
-plot(Mgamm$gam)
-
-ResGam4 <- resid(Mgamm$gam, type="pearson")
-Resmer <- resid(Mgamm$mer, type="deviance")
-
-plot(ResGam4 ~ macro$Cov.Flu, xlab="Arrival time",
-     ylab="Pearson residuals (Fixed)")
-plot(Resmer ~ macro$Cov.Flu, xlab="Arrival time",
-     ylab="Deviance residuals (Random)")
 
 
 #===============#
@@ -1623,50 +1872,6 @@ myvif <- function(mod) {
   invisible(result)
 }
 
-#END VIF FUNCTIONS
-
-Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")]
-corvif(Z)
-#install.packages("usdm")
-library(usdm)
-vif(Z)
-vifcor(Z)
-vifstep(Z)
-
-Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")]
-corvif(Z)
-
-
-drop1(mod1, test="Chi") # Cov.Others
-
-mod2 <- update(mod1,.~.-Cov.Others)
-summary(mod2)
-
-
-# Negaive Binomial
-
-f2 <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Asc + Cov.Bryo + Cov.Spong + offset(Samp.time) + (1|fSite))
-
-library(glmmTMB)
-nb1 <- glm(f2,family = binomial, data=macro)
-summary(nb1)
-
-drop1(nb1, test="Chi") # Cov.flu
-
-nb2 <- update(nb1,.~.-Cov.Flu)
-summary(nb2)
-
-drop1(nb2, test="Chi")
-
-nb3 <- update(nb2,.~.-Cov.Asc)
-summary(nb3)
-
-# Validacao:
-#install.packages("DHARMa")
-library(DHARMa)
-simulationOutput <- simulateResiduals(fittedModel = nb1)
-plot(simulationOutput)
-
 
 
 # ZEro inflated - NB
@@ -1766,430 +1971,14 @@ predictor <- rnorm(n)  # Generating predictor variable (just a random normal dis
 response <- 3 + 2 * covariate + rnorm(n)  # Generating response variable (linear relationship with covariate)
 
 # Fit linear regression model with beta-distributed covariate
-model <- lm(response ~ covariate + predictor)
+model <- lm(Chiton_F ~ Fissu + Crabs, data=macro.pa)
 
 # Summarize model
 summary(model)
 
 # Plot data and fitted model
-plot(covariate, response, main = "Linear Regression with Beta-Distributed Covariate", xlab = "Covariate", ylab = "Response")
+plot(macro.pa$Fissu, macro.pa$Chiton_F, main = "Linear Regression with Beta-Distributed Covariate", xlab = "Covariate", ylab = "Response")
 abline(model, col = "red")
-
-
-
-## 1° Formula ####
-# Considerando apenas os parametros ambientais e cobertura do substrato:
-
-library(pscl)
-f1 <- formula(Chiton_F ~ Area.total + Wt.level + Weight + Cov.Flu + Cov.Bryo + Cov.Spong + (1|fSite))
-
-# GLMM Poisson:
-# Modelo completo
-library(glmmTMB)
-mod1 <- glmmTMB(f1,family = poisson, data=macro)
-summary(mod1)
-
-drop1(mod1, test="Chi") # Cov.Flu
-
-mod2 <- update(mod1,.~.-Cov.Flu)
-summary(mod2)
-
-drop1(mod2, test="Chi")
-
-mod3 <- update(mod2,.~.-Cov.Spong)
-summary(mod3)
-
-drop1(mod3, test="Chi")
-
-mod4 <- update(mod3,.~.-Weight)
-summary(mod4)
-
-# Vamos comparar os modelos:
-
-library(MuMIn)
-model.sel(mod1, mod2, mod3, mod4) # mod4
-
-# vendo a diferenca entre os modelos pela ANOVA:
-anova(mod1, mod2, mod3, mod4)
-
-# R2
-r.squaredGLMM(mod4)
-
-#install.packages("AICcmodavg")
-detach(MuMIn)
-library(AICcmodavg)
-
-# setup a subset of models of Table 1
-Cand.models <- list(mod1, mod2, mod3, mod4)
-
-##create a vector of names to trace back models in set
-Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
-
-##generate AICc table
-aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
-
-##round to 4 digits after decimal point and give log-likelihood
-print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
-      digits = 4, LL = TRUE)
-
-
-#Vamos analisar o vif do modelo:
-# Calculo da inflacao da variancia para fatores lineares vif - fator de inflacao - menor que 3
-
-library(car)
-vif(mod4) # Nao deu certo
-
-# Validacao:
-#install.packages("DHARMa")
-library(DHARMa)
-simulationOutput <- simulateResiduals(fittedModel = mod4)
-plot(simulationOutput)
-
-# Teste para inflacao de zero
-testZeroInflation(simulationOutput)
-
-# b. Detecting missing predictors or wrong functional assumptions
-
-testUniformity(simulationOutput = simulationOutput)
-par(mfrow = c(1,2))
-plotResiduals(simulationOutput, data$Cov.Bryo)
-plotResiduals(simulationOutput, data$Area.total)
-
-# Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod4,
-                            n = 1000)
-plot(simRes) # good
-
-# MODELO AJUSTADO COM POISSON!!!!
-# Prinipais variáveis
-
-## 2° Formula ####
-# Considerando a presença de esécies de outros taxons na lateral da rocha:
-
-f2 <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms + Spong +
-                Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
-
-
-library(tidyverse)
-library(vegan) # decostand() function
-
-# Tranformando os dados de abundancias de coespecies em presenca-ausencia:
-data2 <- decostand(data[,15:29], "pa") %>% cbind(data[,1:14])
-head(data2)
-data2$fSite <- factor(data$Site)
-
-# Modelo completo:
-
-mod2 <- glmmTMB(f2,family = poisson, data=data2)
-summary(mod2)
-
-drop1(mod2, test="Chi")
-
-# Retirando 'Spong' chegamos ao mod2a:
-f2a <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms +
-                Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
-mod2a <- glmmTMB(f2a,family = poisson, data=data2)
-summary(mod2a)
-drop1(mod2a, test="Chi")
-
-# Retirando 'Worms' chegamos ao mod2b
-f2b <- formula(Chiton_F ~ Bryo + Asci + Crabs +
-                 Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
-mod2b <- glmmTMB(f2b,family = poisson, data=data2)
-summary(mod2b)
-drop1(mod2b, test="Chi")
-
-# Retirando 'Hermit' chegamos ao mod2c:
-f2c <- formula(Chiton_F ~ Bryo + Asci + Crabs +
-                 Urchins + Zoanthus  + Fissu + (1|fSite))
-mod2c <- glmmTMB(f2c,family = poisson, data=data2)
-summary(mod2c)
-drop1(mod2c, test="Chi")
-
-# Retirando 'Asci' chegamos ao mod2d:
-f2d <- formula(Chiton_F ~ Bryo + Crabs + Urchins + Zoanthus  + Fissu + (1|fSite))
-mod2d <- glmmTMB(f2d,family = poisson, data=data2)
-summary(mod2d)
-drop1(mod2d, test="Chi")
-
-# Retirando 'Bryo' chegamos ao mod2e:
-f2e <- formula(Chiton_F ~ Crabs + Urchins + Zoanthus  + Fissu + (1|fSite))
-mod2e <- glmmTMB(f2e,family = poisson, data=data2)
-summary(mod2e)
-drop1(mod2e, test="Chi")
-
-# Retirando 'Zoanthus' chegamos ao mod2f:
-f2f <- formula(Chiton_F ~ Crabs + Urchins + Fissu + (1|fSite))
-mod2f <- glmmTMB(f2f,family = poisson, data=data2)
-summary(mod2f)
-drop1(mod2f, test="Chi")
-
-# Retirando 'Zoanthus' chegamos ao mod2g:
-f2g <- formula(Chiton_F ~ Crabs + Fissu + (1|fSite))
-mod2g <- glmmTMB(f2g,family = poisson, data=data2)
-summary(mod2g)
-
-model.sel(mod2, mod2a, mod2b, mod2c,mod2d,mod2e,mod2f,mod2g)
-
-# vendo a diferenca entre os modelos pela ANOVA:
-anova(mod2, mod2a, mod2b, mod2c,mod2d,mod2e,mod2f,mod2g)
-
-simulationOutput <- simulateResiduals(fittedModel = mod2d)
-plot(simulationOutput)
-
-# Teste para inflacao de zero
-par(mfrow = c(1,1))
-testZeroInflation(simulationOutput)
-
-simRes <- simulateResiduals(fittedModel = mod2d,
-                            n = 1000)
-plot(simRes) # bad!
-
-# Apresentou problema no ajuste dos valores observados vs esperados pelo resíduos simulados
-# o Komogorov-Sminoff test falhou em aceitar a hipotese nulo (KS tes signifiativo, p=00.3)
-
-# Ir para distribuição Binomial Negativa do mod2d:
-
-f2d <- formula(Chiton_F ~ Bryo + Crabs + Urchins + Zoanthus  + Fissu + (1|fSite))
-mod2dNB <- glmmTMB(f2d,family = nbinom1, data=data2)
-summary(mod2dNB)
-
-simulationOutput <- simulateResiduals(fittedModel = mod2dNB)
-plot(simulationOutput)
-
-simRes <- simulateResiduals(fittedModel = mod2dNB,
-                            n = 1000)
-plot(simRes) # Good!
-
-# Modelo Ajustado!!
-
-# Teste para inflacao de zero
-par(mfrow = c(1,1))
-testZeroInflation(simulationOutput)
-
-
-## 3° Formula ####
-# Considerando a abundância das espécies que co-ocorrem na lateral da rocha:
-
-f3 <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms + Spong +
-                Urchins + Zoanthus + Hermit + Fissu + (1|fSite))
-
-# Modelo completo:
-
-mod3 <- glmmTMB(f3,family = poisson, data=data)
-summary(mod3)
-
-drop1(mod3, test="Chi")
-
-# Retirando 'Hermit' chegamos ao mod3a:
-f3a <- formula(Chiton_F ~ Bryo + Asci + Crabs + Worms + Spong +
-                 Urchins + Zoanthus + Fissu + (1|fSite))
-mod3a <- glmmTMB(f3a,family = poisson, data=data)
-summary(mod3a)
-drop1(mod3a, test="Chi")
-
-# Retirando 'Worms' chegamos ao mod3b
-f3b <- formula(Chiton_F ~ Bryo + Asci + Crabs + Spong +
-               Urchins + Zoanthus + Fissu + (1|fSite))
-mod3b <- glmmTMB(f3b,family = poisson, data=data)
-summary(mod3b)
-drop1(mod3b, test="Chi")
-
-# Retirando 'Spong' chegamos ao mod3c:
-f3c <- formula(Chiton_F ~ Bryo + Asci + Crabs +
-                 Urchins + Zoanthus + Fissu + (1|fSite))
-mod3c <- glmmTMB(f3c,family = poisson, data=data)
-summary(mod3c)
-drop1(mod3c, test="Chi")
-
-# Retirando 'Fissu' chegamos ao mod3d:
-f3d <- formula(Chiton_F ~ Bryo + Asci + Crabs +
-                 Urchins + Zoanthus + (1|fSite))
-mod3d <- glmmTMB(f3d,family = poisson, data=data)
-summary(mod3d)
-drop1(mod3d, test="Chi")
-
-# Retirando 'Zoanthus' chegamos ao mod3e:
-f3e <- formula(Chiton_F ~ Bryo + Asci + Crabs +
-                 Urchins + (1|fSite))
-mod3e <- glmmTMB(f3e,family = poisson, data=data)
-summary(mod3e)
-drop1(mod3e, test="Chi")
-
-model.sel(mod3, mod3a, mod3b, mod3c,mod3d,mod3e)
-
-simulationOutput <- simulateResiduals(fittedModel = mod3d)
-plot(simulationOutput)
-
-# Teste para inflacao de zero
-par(mfrow = c(1,1))
-testZeroInflation(simulationOutput)
-
-simRes <- simulateResiduals(fittedModel = mod3d,
-                            n = 1000)
-plot(simRes) # bad!
-
-# Apresentou problema no ajuste dos valores observados vs esperados pelo resíduos simulados
-# o Komogorov-Sminoff test falhou em aceitar a hipotese nulo (KS tes signifiativo, p=00.3)
-
-# Ajustar o mod3d para Binomial Negativa:
-
-f3d <- formula(Chiton_F ~ Bryo + Asci + Crabs +
-                 Urchins + Zoanthus + (1|fSite))
-mod3dNB <- glmmTMB(f3d,family = nbinom1, data=data)
-summary(mod3dNB)
-
-simulationOutput <- simulateResiduals(fittedModel = mod3dNB)
-plot(simulationOutput)
-
-# Teste para inflacao de zero
-par(mfrow = c(1,1))
-testZeroInflation(simulationOutput)
-
-simRes <- simulateResiduals(fittedModel = mod3dNB,
-                            n = 1000)
-plot(simRes) # bad!
-
-# Modelo não ajustado
-
-
-## Modelo Lateral ####
-
-# Vou criar juntando as variaveis eligidas por cada modelo:
-
-f4 <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + Bryo + Asci +
-                Crabs + Urchins + Zoanthus + Fissu + (1|fSite))
-
-# Modelo completo:
-
-mod4 <- glmmTMB(f4,family = poisson, data=data) # Estou considerando abundancias
-summary(mod4)
-drop1(mod4, test="Chi")
-
-# Tirando 'Asci' chegamos ao mod4a:
-
-f4a <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo + Bryo +
-                Crabs + Urchins + Zoanthus + Fissu + (1|fSite))
-mod4a <- glmmTMB(f4a,family = poisson, data=data) # Estou considerando abundancias
-summary(mod4a)
-drop1(mod4a, test="Chi")
-
-# Tirando 'Bryo' chegamos ao mod4b:
-
-f4b <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo  +
-                 Crabs + Urchins + Zoanthus + Fissu + (1|fSite))
-mod4b <- glmmTMB(f4b,family = poisson, data=data) # Estou considerando abundancias
-summary(mod4b)
-drop1(mod4b, test="Chi")
-
-# Tirando 'Zoanthus' chegamos ao mod4c:
-
-f4c <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo  +
-                 Crabs + Urchins + Fissu + (1|fSite))
-mod4c <- glmmTMB(f4c,family = poisson, data=data) # Estou considerando abundancias
-summary(mod4c)
-drop1(mod4c, test="Chi")
-
-# Tirando 'Fissu' chegamos ao mod4d:
-
-f4d <- formula(Chiton_F ~ Area.lateral + Cov.Flu + Cov.Bryo  +
-                 Crabs + Urchins  + (1|fSite))
-mod4d <- glmmTMB(f4d,family = poisson, data=data) # Estou considerando abundancias
-summary(mod4d)
-drop1(mod4d, test="Chi")
-
-# Vamos comparar os modelos:
-
-library(MuMIn)
-model.sel(mod4, mod4a, mod4b, mod4c, mod4d)
-
-# vendo a diferenca entre os modelos pela ANOVA:
-anova(mod4, mod4a, mod4b, mod4c, mod4d)
-
-# Podemos considerar tanto o mod1c cquanto o mod1b, mas vamos coniderar o mod1c por ter o maior peso na explicação os modelos e ser o mais parcimonioso
-
-r.squaredGLMM(mod4d)
-
-#Vamos analisar o vif do modelo:
-# Calculo da inflacao da variancia para fatores lineares vif - fator de inflacao - menor que 3
-
-library(car)
-vif(mod4d)
-
-
-# Validacao:
-
-library(DHARMa)
-simulationOutput <- simulateResiduals(fittedModel = mod4d)
-plot(simulationOutput)
-
-# Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod4d,
-                            n = 1000)
-plot(simRes) # good
-
-# Vou odar o mod4d co nbnomial:
-mod4dNB1 <- glmmTMB(f4d,family = nbinom1, data=data) # Estou considerando abundancias
-mod4dNB2 <- glmmTMB(f4d,family = nbinom2, data=data) # Estou considerando abundancias
-summary(mod4dNB1)
-summary(mod4dNB2)
-
-simulationOutput <- simulateResiduals(fittedModel = mod4dNB2)
-plot(simulationOutput)
-
-# Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod4dNB2,
-                            n = 1000)
-plot(simRes) # good
-
-# one of the possible test, for other options see ?testResiduals / vignette
-testDispersion(simRes)
-testZeroInflation(simulationOutput)
-testResiduals(simRes)
-testUniformity(simulationOutput = simRes)
-# b. Detecting missing predictors or wrong functional assumptions
-
-testUniformity(simulationOutput = simulationOutput)
-par(mfrow = c(1,2))
-plotResiduals(simulationOutput, data$Cov.Flu)
-plotResiduals(simulationOutput, data$Cov.Bryo)
-
-# Inflação de zero
-
-mod4dZi <- glmmTMB(f4d,family = poisson, zi=~Samp.time, data=data)
-summary(mod4dZi)
-
-simulationOutput <- simulateResiduals(fittedModel = mod4dZi)
-plot(simulationOutput)
-
-# Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod4dZi,
-                            n = 1000)
-plot(simRes) # good
-
-
-
-+++++++++
-# Modelo disconsiderando a inflacao de zero:
-library(glmmTMB)
-
-mod0 <- glmmTMB(Chiton_F ~ Temp + Wt.level + Weight + Area +
-                  Cov.Flu + Cov.DeathCCAPey + Cov.Asc + Cov.Bryo + Cov.Spong +
-                  F.sand + C.sand + Granule + Pebbles + f.Cobbles + Boulders + Rug.base +
-                  Bryo + Asci + Bival + Crabs + Shrimp + Barna + Worms + Spong +
-                  Urchins + Brittle + Coral + Zoanthus + Flatworm + Hermit + Gastro + (1|f.Site) + (1|Samp.time),
-                family = nbinom1(link = "log"), zi=~0, data = data)
-
-summary(mod0)
-
-# Reduzindo modelo 0:
-
-drop1(mod0, test="Chi")
-
-mod0a <- glmmTMB(Chiton_F ~ Temp + Expo.area + Cov.DeathCCAPey + Cov.Flu + Cov.Bryo + Wt.level + (1|fSite) + (1|Samp.time),
-                 family = nbinom1(link = "log"), zi=~1, data = data)
-
-summary(mod0a)
 
 
 
@@ -2311,7 +2100,7 @@ testZeroInflation(simulationOutput)
 
 testUniformity(simulationOutput = simulationOutput)
 par(mfrow = c(1,2))
-plotResiduals(simulationOutput, data$Cov.Flu)
+plotResiduals(simulationOutput, macro.pa$Fissu)
 plotResiduals(simulationOutput, data$Expo.area)
 
 
