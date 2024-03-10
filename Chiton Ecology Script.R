@@ -1668,7 +1668,7 @@ model.sel(mod2h,nb13) # nb13 menor AIC
 # ~at boulder scale ####
 
 
-
+str(macro)
 
 
 
