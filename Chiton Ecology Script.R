@@ -436,15 +436,18 @@ kruskal.test(Weight ~ Site,
 
 
 # ~ Boulder Area ####
+summary(macro$Area.total)
+mean(macro$Area.total)
+sd(macro$Area.total)
 
-tapply(data$Area.total,data$fSite,mean)
-tapply(data$Area.total,data$fSite,sd)
+tapply(macro$Area.total,macro$fSite,mean)
+tapply(macro$Area.total,macro$fSite,sd)
 
 # Normality test:
-shapiro.test(data$Area.total) # Nao  normal
+shapiro.test(macro$Area.total) # Nao  normal
 
 # Homogeneity test:
-variancia <- tapply(data$Area.total,data$fSite,var)
+variancia <- tapply(macro$Area.total,macro$fSite,var)
 variancia
 
 # Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
@@ -453,64 +456,65 @@ variancia
 variancia [2]/ variancia [1]  # Buzios eh 3x maior...provavelmente homocedastico
 
 # Teste de Bartlett:
-bartlett.test(data$Area.total ~ data$fSite) # H0 rejeitada (Heterocedastico)
+bartlett.test(macro$Area.total ~ macro$fSite) # H0 rejeitada (Heterocedastico)
 
 # Teste de Fligner-Killeen:
-fligner.test(data$Area.total ~ data$fSite) # H0 aceita (Homocedastico)
+fligner.test(macro$Area.total ~ macro$fSite) # H0 aceita (Homocedastico)
 
 library(car)
-leveneTest(Area.total ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+leveneTest(Area.total ~ fSite, data=macro, center=mean) # H0 aceita (Homocedastico)
 
 # Kruaskal-Wallis test:
 
 kruskal.test(Area.total ~ Site,
-             data = data) # H0 aceita, nao ha diferenca entre praias
+             data = macro) # H0 aceita, nao ha diferenca entre praias
 
 
-# ~ Total Exposed Side area ####
-tapply(data$Expo.area,data$fSite,mean)
-tapply(data$Expo.area,data$fSite,sd)
+# ~ Lateral Exposed area ####
+summary(macro$Area.lateral)
+mean(macro$Area.lateral)
+sd(macro$Area.lateral)
 
-tapply(data$Area.total,data$fSite,mean)
-tapply(data$Area.total,data$fSite,sd)
+tapply(macro$Area.lateral,macro$Site,mean)
+tapply(macro$Area.lateral,macro$fSite,sd)
 
 # Normality test:
-shapiro.test(data$Expo.area) # Nao  normal
+shapiro.test(macro$Area.lateral) # Nao  normal
 
 # Homogeneity test:
-variancia <- tapply(data$Expo.area,data$fSite,var)
+variancia <- tapply(macro$Area.lateral,macro$fSite,var)
 variancia
 
 # Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
 # menor variancia:
 
-variancia [2]/ variancia [1]  # Buzios eh 3x maior...provavelmente homocedastico
+variancia [2]/ variancia [4]
 
 # Teste de Bartlett:
-bartlett.test(data$Expo.area ~ data$fSite) # H0 rejeitada (Heterocedastico)
+bartlett.test(macro$Area.lateral ~ macro$fSite) # H0 rejeitada (Heterocedastico)
 
 # Teste de Fligner-Killeen:
-fligner.test(data$Expo.area ~ data$fSite) # H0 aceita (Homocedastico)
+fligner.test(macro$Area.lateral ~ macro$fSite) # H0 aceita (Homocedastico)
 
 library(car)
-leveneTest(Area.lateral ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+leveneTest(Area.lateral ~ fSite, data=macro, center=mean) # H0 aceita (Homocedastico)
 
 # Kruaskal-Wallis test:
 
 kruskal.test(Area.lateral ~ Site,
-             data = data) # H0 aceita, nao ha diferenca entre praias
+             data = macro) # H0 aceita, nao ha diferenca entre praias
 
 # ~Cov.Flu ####
-mean(data$Cov.Flu)
-sd(data$Cov.Flu)
-tapply(data$Cov.Flu,data$fSite,mean)
-tapply(data$Cov.Flu,data$fSite,sd)
+mean(macro$Cov.Flu)
+sd(macro$Cov.Flu)
+tapply(macro$Cov.Flu,macro$fSite,mean)
+tapply(macro$Cov.Flu,macro$fSite,sd)
 
 # Normality test:
-shapiro.test(data$Cov.Flu) # Nao  normal
+shapiro.test(macro$Cov.Flu) # Nao  normal
 
 # Homogeneity test:
-variancia <- tapply(data$Cov.Flu,data$fSite,var)
+variancia <- tapply(macro$Cov.Flu,macro$fSite,var)
 variancia
 
 # Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
@@ -519,25 +523,25 @@ variancia
 variancia [3]/ variancia [2]  # Pitangui eh 2.35x maior...provavelmente homocedastico
 
 # Teste de Bartlett:
-bartlett.test(data$Cov.Flu ~ data$fSite) # H0 aceita (Homocedastico)
+bartlett.test(macro$Cov.Flu ~ macro$fSite) # H0 aceita (Homocedastico)
 
 # Teste de Fligner-Killeen:
-fligner.test(data$Cov.Flu ~ data$fSite) # H0 aceita (Homocedastico)
+fligner.test(macro$Cov.Flu ~ macro$fSite) # H0 aceita (Homocedastico)
 
 library(car)
-leveneTest(Cov.Flu ~ fSite, data=data, center=mean) # H0 aceita (Homocedastico)
+leveneTest(Cov.Flu ~ fSite, data=macro, center=mean) # H0 aceita (Homocedastico)
 
 # Kruaskal-Wallis test:
 
 kruskal.test(Cov.Flu ~ Site,
-             data = data) # H0 rejeitada, ha diferenca entre praias
+             data = macro) # H0 rejeitada, ha diferenca entre praias
 
 # Dunn test:
 
 library(FSA)
 
 DT = dunnTest(Cov.Flu ~ fSite,
-              data=data,
+              data=macro,
               method="bh")      # Adjusts p-values for multiple comparisons;
 
 DT
@@ -555,7 +559,7 @@ cldList(P.adj ~ Comparison,
         threshold = 0.05)
 
 boxplot(Cov.Flu ~ Site,
-        data = data)
+        data = macro)
 
 # ~Cov.UNFlu ####
 
@@ -618,14 +622,14 @@ boxplot(Cov.Asc ~ Site,
         data = data)
 
 # ~Cov.Bryo ####
-tapply(data$Cov.Bryo,data$fSite,mean)
-tapply(data$Cov.Bryo,data$fSite,sd)
+tapply(macro$Cov.Bryo,macro$fSite,mean)
+tapply(macro$Cov.Bryo,macro$fSite,sd)
 
 # Normality test:
-shapiro.test(data$Cov.Bryo) # Nao  normal
+shapiro.test(macro$Cov.Bryo) # Nao  normal
 
 # Homogeneity test:
-variancia <- tapply(data$Cov.Bryo,data$fSite,var)
+variancia <- tapply(macro$Cov.Bryo,macro$fSite,var)
 variancia
 
 # Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
@@ -634,18 +638,18 @@ variancia
 variancia [4]/ variancia [2]  # Santa Rita eh 13x maior que Buzios
 
 # Teste de Bartlett:
-bartlett.test(data$Cov.Bryo ~ data$fSite) # H0 rejeitada (Heterocedastico)
+bartlett.test(macro$Cov.Bryo ~ macro$fSite) # H0 rejeitada (Heterocedastico)
 
 # Teste de Fligner-Killeen:
-fligner.test(data$Cov.Bryo ~ data$fSite) # H0 aceita (Homocedastico)
+fligner.test(macro$Cov.Bryo ~ macro$fSite) # H0 aceita (Homocedastico)
 
 library(car)
-leveneTest(Cov.Bryo ~ fSite, data=data, center=mean) # H0 Rejeitada (Heterocedastico)
+leveneTest(Cov.Bryo ~ fSite, data=macro, center=mean) # H0 Rejeitada (Heterocedastico)
 
 # Kruaskal-Wallis test:
 
 kruskal.test(Cov.Bryo ~ Site,
-             data = data) # H0 aceita, nao ha diferenca entre praias
+             data = macro) # H0 aceita, nao ha diferenca entre praias
 
 
 # ~Cov.Spong ####
@@ -762,6 +766,122 @@ leveneTest(Chiton_F ~ fSite, data=data) # H0 rejeitada, dados heterocedasticos
 leveneTest(Chiton_F ~ fSite, data=data, center=mean)
 
 # mesmo resultado usando a media. HETEROCEDASTICIDADE
+
+# ~cov.cca ####
+mean(macro$cov.cca)
+sd(macro$cov.cca)
+tapply(macro$cov.cca,macro$Site,mean)
+tapply(macro$cov.cca,macro$Site,sd)
+
+# Normality test:
+shapiro.test(macro$cov.cca) # Normal
+
+# Homogeneity test:
+variancia <- tapply(macro$cov.cca,macro$Site,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [1]/ variancia [2]  # Baia Formosa excede 3.35x...provavelmente homocedastico
+
+# Teste de Bartlett:
+bartlett.test(macro$cov.cca ~ macro$Site) # H0 Rejected (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(macro$cov.cca ~ macro$Site) # H0 Accepted (Homocedastico)
+
+library(car)
+leveneTest(cov.cca ~ Site, data=macro, center=mean) # H0 Rejected (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(cov.cca ~ Site,
+             data = macro) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(cov.cca ~ Site,
+              data=macro,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+
+PT
+
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+boxplot(cov.cca ~ Site,
+        data = macro)
+
+
+# ~cov.pey ####
+mean(macro$cov.pey)
+sd(macro$cov.pey)
+tapply(macro$cov.pey,macro$Site,mean)
+tapply(macro$cov.pey,macro$Site,sd)
+
+# Normality test:
+shapiro.test(macro$cov.pey) # Non Normal
+
+# Homogeneity test:
+variancia <- tapply(macro$cov.pey,macro$Site,var)
+variancia
+
+# Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
+# menor variancia:
+
+variancia [1]/ variancia [4]  # Baia Formosa excede 9x...provavelmente Heterocedastico
+
+# Teste de Bartlett:
+bartlett.test(macro$cov.pey ~ macro$Site) # H0 Rejected (Heterocedastico)
+
+# Teste de Fligner-Killeen:
+fligner.test(macro$cov.pey ~ macro$Site) # H0 Rejected (Heterocedastico)
+
+library(car)
+leveneTest(cov.pey ~ Site, data=macro, center=mean) # H0 Rejected (Heterocedastico)
+
+# Kruaskal-Wallis test:
+
+kruskal.test(cov.pey ~ Site,
+             data = macro) # H0 rejeitada, ha diferenca entre praias
+
+# Dunn test:
+
+library(FSA)
+
+DT = dunnTest(cov.pey ~ Site,
+              data=macro,
+              method="bh")      # Adjusts p-values for multiple comparisons;
+
+DT
+
+# Compact letter display:
+
+PT = DT$res
+
+PT
+
+library(rcompanion)
+
+cldList(P.adj ~ Comparison,
+        data = PT,
+        threshold = 0.05)
+
+boxplot(cov.pey ~ Site,
+        data = macro)
+
 
 # 7. Relationship X & Y ? ####
 
@@ -1254,35 +1374,35 @@ env.std.pca
 macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
 str(macro)
 macro$fSite <- factor(macro$Site)
+head(macro)
 
 # Variable Y: Chiton_F
-# Variables X: Area.lateral,Cov.Flu,Cov.Asc,Cov.Bryo,Cov.Spong,Cov.Others)
+# Variables X: Area.lateral,Cov.Flu,Cov.Asc,cov.unflu,Cov.Bryo,Cov.Spong,Cov.Others)
 # Random factor: fSite
 
 ## Exploring variables ##
 
-Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others","Gastrop")]
+Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","cov.unflu","Cov.Bryo","Cov.Spong","Cov.Others")]
 
 #install.packages("usdm")
 library(usdm)
 vif(Z)
 vifcor(Z)
-vifstep(Z, th=3,keep = "Cov.Flu") # Cov.Other excluded
+vifstep(Z, th=3,keep = "Cov.Flu") # cov.unflu excluded
 
-boxplot(macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")])
+boxplot(macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")])
 
-pairs(macro[,c("Chiton_F","Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")],
+pairs(macro[,c("Chiton_F","Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")],
       panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Transformando Area.lateral
 macro$logArea.lateral <- log(macro$Area.lateral)
 str(macro)
 
-boxplot(macro[,c("logArea.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")])
+boxplot(macro[,c("logArea.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")])
 
-pairs(macro[,c("Chiton_F","logArea.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong")],
+pairs(macro[,c("Chiton_F","logArea.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")],
       panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
-
 
 
 # A variavel "area.lateral" apresenta dimensoes muito maiores que as demais.
@@ -1349,7 +1469,7 @@ summary(mod1b)
 ### ~AIC Selection ####
 
 library(MuMIn)
-model.sel(mod1, mod1a, mod1b)
+model.sel(mod1, mod1a, mod1b) # mod1b (AIC: 305)
 anova(mod1, mod1a, mod1b, test="Chi")
 
 #install.packages("AICcmodavg")
@@ -1374,8 +1494,13 @@ r.squaredGLMM(mod1b)
 
 #install.packages("DHARMa")
 library(DHARMa)
-simulationOutput <- simulateResiduals(fittedModel = mod1b)
-plot(simulationOutput)
+
+simulationOutput <- simulateResiduals(fittedModel = mod1b,
+                                      plot=T)
+
+plot(residuals(simulationOutput)) # Asymptotic is good!
+plotResiduals(simulationOutput, form = macro$Cov.Flu)
+
 
 # a. Randomizacoes:
 simRes <- simulateResiduals(fittedModel = mod1b,
@@ -1394,9 +1519,238 @@ plotResiduals(simulationOutput, macro$Area.lateral)
 par(mfrow = c(1,1))
 testZeroInflation(simulationOutput)
 
+# d. Dispersion
+testDispersion(mod1b)
+testDispersion(simRes)
+testOutliers(simulationOutput = simulationOutput)
+
+# e. spatial autocorrelation # DEU ERRO
+
+testSpatialAutocorrelation(simulationOutput, x=macro$x, macro$y)
+testSpatialAutocorrelation(simulationOutput, x=macro$Cov.Flu, macro$Chiton_F)
+testSpatialAutocorrelation(mod1b, x=macro$Cov.Flu, macro$Chiton_F)
+testSpatialAutocorrelation(mod1b, x=macro$x, macro$y)
+testSpatialAutocorrelation(simRes, x=macro$x, macro$y)
+testSpatialAutocorrelation(simRes, x=macro$Cov.Flu, macro$Chiton_F)
+testSpatialAutocorrelation(simulationOutput, x=macro$Chiton_F, macro$Cov.Flu)
+
+dM = as.matrix(dist(cbind(macro$x, macro$y)))
+testSpatialAutocorrelation(simulationOutput, distMat = dM)
+
+
+install.packages("sfsmisc")
+library(sfsmisc)
+testData = createData(sampleSize = 100, family = poisson(), spatialAutocorrelation = 5)
+head(testData)
+summary(testData)
+fittedModel <- glmer(observedResponse ~ Environment1 + (1|group), data = testData, family = poisson() )
+simulationOutput <- simulateResiduals(fittedModel = fittedModel)
+testSpatialAutocorrelation(simulationOutput = simulationOutput, x = testData$x, y= testData$y)
+
+
+
+
 ## CONCLUIDO ###
 
-## 2° Model ####
+## 2° MODEL ####
+
+# O objetivo eh investigar a variavel "COV.FLU" como  especies distintas para
+# saber se ha influencia especie-especifica.
+
+# Hipótese: nao havera influencia especie especifica.
+
+macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
+str(macro)
+macro$fSite <- factor(macro$Site)
+
+# Variable Y: Chiton_F
+# Variables X: Area.lateral, Cov.Asc,Cov.Bryo,Cov.Spong,Cov.Others, cov.cca, cov.pey)
+# Random factor: fSite
+
+## Exploring variables ##
+
+Z<-macro[,c("Area.lateral","cov.cca","cov.pey","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")]
+
+#install.packages("usdm")
+library(usdm)
+vif(Z)
+vifcor(Z)
+vifstep(Z, th=3,keep = "cov.cca") # Cov.Other excluded
+
+boxplot(macro[,c("cov.cca","cov.pey","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")])
+
+pairs(macro[,c("Chiton_F","Area.lateral","cov.cca","cov.pey","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")],
+      panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+# Transformando Area.lateral
+macro$logArea.lateral <- log(macro$Area.lateral)
+str(macro)
+
+boxplot(macro[,c("logArea.lateral","cov.cca","cov.pey","Cov.Asc","Cov.Bryo","Cov.Spong")])
+
+pairs(macro[,c("Chiton_F","logArea.lateral","cov.cca","cov.pey","Cov.Asc","Cov.Bryo","Cov.Spong")],
+      panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+
+# Make the coplot
+coplot(Chiton_F ~ cov.cca | Site, data=macro, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+coplot(Chiton_F ~ cov.pey | Site, data=macro, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+library(beeswarm)
+beeswarm::beeswarm(cov.cca ~ Site,data=macro)
+beeswarm::beeswarm(cov.pey ~ Site,data=macro, col="red", pch=16, method="swarm")
+
+dotchart(macro$cov.cca, main = "CCA", group = macro$fSite)
+dotchart(macro$cov.pey, main = "PEY", group = macro$fSite)
+
+stripchart(cov.cca ~ Site,data=macro, method="stack")
+stripchart(cov.pey ~ Site,data=macro, method="stack")
+
+library(lattice)
+
+xyplot(Chiton_F ~ cov.cca | Site, data=macro, type=c("p","r"))
+xyplot(Area.lateral ~ cov.pey| Site, data=macro, type=c("p","r"))
+
+### ~GLMM Poisson ####
+
+str(macro)
+library(pscl)
+
+f.full <- formula(Chiton_F ~ Area.lateral + cov.cca + cov.pey + Cov.Asc + Cov.Bryo
+                  + Cov.Spong + (1|fSite))
+
+library(glmmTMB)
+mod2 <- glmmTMB(f.full,family = poisson, data=macro)
+summary(mod2)
+
+drop1(mod2, test="Chi") # Cov. Asc
+f1 <- update(f.full,.~.-Cov.Asc)
+
+mod2a <- glmmTMB(f1, family = poisson, data=macro)
+summary(mod2a)
+
+drop1(mod2a, test="Chi") # Cov. Spong
+f2 <- update(f1,.~.-Cov.Spong)
+
+mod2b <- glmmTMB(f2, family = poisson, data=macro)
+summary(mod2b)
+
+drop1(mod2b, test="Chi") # cov.cca
+f3 <- update(f2,.~.-cov.cca)
+
+mod2c <- glmmTMB(f3, family = poisson, data=macro)
+summary(mod2c)
+
+drop1(mod2c, test="Chi") # cov.pey
+f4 <- update(f3,.~.-cov.pey)
+
+mod2d <- glmmTMB(f4, family = poisson, data=macro)
+summary(mod2d)
+
+### ~AIC Selection ####
+
+library(MuMIn)
+model.sel(mod2, mod2a, mod2b, mod2c, mod2d) # mod2b (AIC: 305.4)
+anova(mod2, mod2a, mod2b, mod2c, mod2d, test="Chi")
+
+#install.packages("AICcmodavg")
+library(AICcmodavg)
+
+#setup a subset of models of Table 1
+Cand.models <- list(mod2, mod2a, mod2b, mod2c, mod2d)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+r.squaredGLMM(mod2b)
+r.squaredGLMM(mod2c)
+
+# O modelo de menor AIC foi o mod2b mas pela comparacao de deltaAIC eh possivel
+# considerar mod2b = mod2c, portanto vamos testar a validade de ambos
+
+### ~Model Validation ####
+
+## mod2b: ~ cov.cca + cov.pey + Area.lateral + Cov.Bryo + (1|fSite)
+
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod2b)
+plot(simulationOutput)
+
+# a. Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod2b,
+                            n = 1000)
+plot(simRes) # good
+
+# b Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,2))
+plotResiduals(simulationOutput, macro$cov.cca)
+plotResiduals(simulationOutput, macro$cov.pey)
+
+# c. Teste para inflacao de zero
+par(mfrow = c(1,1))
+testZeroInflation(simulationOutput)
+
+simulationOutput <- simulateResiduals(fittedModel = mod2b)
+plot(simulationOutput)
+
+# O mod2b esta otimo!
+
+## mod2c: ~ cov.pey + Area.lateral + Cov.Bryo + (1|fSite)
+simRes <- simulateResiduals(fittedModel = mod2c,
+                            n = 1000)
+plot(simRes) # bad
+
+# Entao, ficamos com o mod2b
+summary(mod2b)
+
+# cobertura de Peyssonelia eh positivamente significativa
+
+# Vamos ver o mod1 e mod2 juntos:
+model.sel(mod1b,mod2b) # mod2b (AIC: 305.4)
+anova(mod1b, mod2b, test="Chi")
+
+# Os modelos nao sao diferentes ou seja por esse metodo nao eh possivel dessociar
+# o efeito visual do espcie especifico. E a peysonelia mesmo em menor prporcao
+# tem importancia na deerminacao do abundancia de quitons
+
+model.sel(mod1, mod1a, mod1b, mod2, mod2a, mod2b, mod2c, mod2d)
+
+evidence.ratio <- 0.255/0.208
+evidence.ratio # 1.22 Ou seja o mod1b eh somente 1.22 vezes mais provavel de ser
+# o melhor modelo do que o mod2b que considera o efeito das especies de algas calcarias.
+
+# Mod.averaging
+mod.sel <- model.sel(mod1, mod1a, mod1b, mod2, mod2a, mod2b, mod2c, mod2d)
+summary(model.avg(mod.sel, subset = delta < 2))
+
+
+## CONCLUIDO ###
+
+
+
+## Model Plus ####
+# NAO VAi ENTRAR NO ARTIGO
 
 # O objetivo eh investigar se eh possivel determinar a abundância dos quítons com
 # base na presença de outros grupos de taxons na lateral da rocha evidando assim
@@ -1664,145 +2018,6 @@ plot(simRes) # Ajusted
 model.sel(mod2h,nb13) # nb13 menor AIC
 
 ## CONCLUIDO ###
-
-# ~at boulder scale ####
-
-
-str(macro)
-
-
-
-
-
-
-
-
-
-#===============#
-
-# 5. Outliers Y & X ?
-
-# A ferramenta grafica tipica utilizada para deteccao de outliers eh o boxplot.
-
-# Vamos analisar por partes:
-# Quitons:
-par(mfrow = c(1,1))
-boxplot(macro$Chiton_F)
-
-# Coberturas:
-boxplot(macro[,c(8:13)])
-
-# Abiotics:
-boxplot(macro[,c(4:7)])
-
-# All:
-boxplot(macro[,c(2:13)])
-
-head(macro)
-# Vamos examinar um pouco mais atraves do 'cleveland dotplot':
-x11()
-par(mfrow= c (4,4))
-
-library(lattice)
-Z <- cbind(macro$Chiton_F,
-           macro$Samp.time,
-           macro$Temp,
-           macro$Wt.level,
-           macro$Weight,
-           macro$Expo.area)
-
-colnames(Z) <- c("Chiton F",
-                 "Samp.time",
-                 "Temp",
-                 "Wt.level",
-                 "Weight",
-                 "Expo.area")
-
-
-
-# Uhh...parece haver um outlier em Samp.time
-
-Z <- cbind(macro$Cov.Flu,
-           macro$Cov.DeathCCAPey,
-           macro$Cov.Others,
-           macro$Cov.Asc,
-           macro$Cov.Bryo,
-           macro$Cov.Spong)
-
-colnames(Z) <- c("Cov.Fluo",
-                 "Cov.DeathCCAPey",
-                 "Cov.Others",
-                 "Cov.Asci",
-                 "Cov.Bryo",
-                 "Cov.Spong")
-
-dotplot(as.matrix(Z), groups = FALSE,
-        strip = strip.custom(bg = 'white',
-                             par.strip.text = list(cex = 0.8)),
-        scales = list(x = list(relation = "free"),
-                      y = list(relation = "free"),
-                      draw = FALSE),
-        col = 1, cex  = 0.5, pch = 16,
-        xlab = "Value of the variable",
-        ylab = "Order of the data")
-
-
-# Boxplots condicionados por praia
-boxplot(Weight ~ Site,data=macro)
-boxplot(Weight ~ Site, varwidth = TRUE, data=macro)
-boxplot(Temp ~ Site, varwidth = TRUE, data=macro)
-boxplot(Wt.level ~ Site, varwidth = TRUE, data=macro)
-boxplot(Expo.area ~ Site, varwidth = TRUE, data=macro)
-boxplot(Samp.time ~ Site, varwidth = TRUE, data=macro)
-boxplot(Cov.Flu ~ fSite, varwidth = TRUE, data=macro)
-boxplot(Cov.DeathCCAPey ~ Site, varwidth = TRUE, data=macro)
-boxplot(Cov.Asc ~ Site, varwidth = TRUE, data=macro)
-boxplot(Cov.Spong ~ Site, varwidth = TRUE, data=macro)
-boxplot(Cov.Bryo ~ Site, varwidth = TRUE, data=macro)
-boxplot(Rug.base ~ Site, varwidth = TRUE, data=macro)
-tapply(macro$Rug.base,macro$f.Site,sum)
-boxplot(Brittle ~ Site, varwidth = TRUE, data=macro)
-tapply(macro$Brittle,macro$f.Site,sum)
-
-library(beeswarm)
-beeswarm::beeswarm(Weight ~ Site,data=macro)
-beeswarm::beeswarm(Temp ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Wt.level ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Expo.area ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Samp.time ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Flu ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.DeathCCAPey ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Asc ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Spong ~ Site,data=macro, col="red", pch=16, method="swarm")
-beeswarm::beeswarm(Cov.Bryo ~ Site,data=macro, col="red", pch=16, method="swarm")
-
-dotchart(macro$Weight, main = "AREA", group = macro$fSite)
-stripchart(Weight ~ Site,data=macro, method="stack")
-stripchart(Temp ~ Site,data=macro, method="stack")
-stripchart(Wt.level ~ Site,data=macro, method="stack")
-stripchart(Expo.area ~ Site,data=macro, method="stack")
-stripchart(Samp.time ~ Site,data=macro, method="stack")
-stripchart(Cov.Flu ~ Site,data=macro, method="stack")
-stripchart(Cov.DeathCCAPey ~ Site,data=macro, method="stack")
-stripchart(Cov.Asc ~ Site,data=macro, method="stack")
-stripchart(Cov.Spong ~ Site,data=macro, method="stack")
-stripchart(Cov.Bryo ~ Site,data=macro, method="stack")
-
-# Podemos observar a dispersao dos dados para cada praia
-# Ou com a funcao do pacote 'lattice' conseguimos ver a dispersao por praia
-library(lattice)
-xyplot(Chiton_F ~ Weight | Site, data=macro)
-xyplot(Chiton_F ~ Weight | Site, data=macro, type=c("p","r")) # com linha de regressao
-xyplot(Chiton_F ~ Temp | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Wt.level | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Expo.area | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Samp.time | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Flu | fSite, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.DeathCCAPey | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Asc | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Spong | Site, data=macro, type=c("p","r"))
-xyplot(Chiton_F ~ Cov.Bryo | Site, data=macro, type=c("p","r"))
-
 
 #========
 
@@ -2676,3 +2891,17 @@ aggregate(data$Samp.time, list(data$Site), FUN=mean)
 
 anova(aov(Samp.time ~ Site, data=data))
 TukeyHSD(aov(Samp.time ~ Site, data=data),ordered=T)
+
+
+install.packages("AED")
+library (AED)
+data (Koalas)
+
+install.packages("ncf")
+library(ncf)
+Correlog <- spline.correlog(x = macro$x,
+                            y = macro$y,
+                            z = macro$Chiton_F,  xmax = 10000)
+
+plot(Correlog)
+summary(Correlog)
