@@ -5,6 +5,14 @@
 # Script for: "chitons.eco.data"
 #++++++++++++++++++++++++#
 
+tinytex::install_tinytex()
+
+sI <- sessionInfo()
+print(sI, RNG = FALSE, locale = FALSE)
+
+utils::sessionInfo()
+sessioninfo::session_info()
+
 #install.packages("usethis")
 usethis::create_project("~/Documents/R sessions/Chiton Ecology/")
 
@@ -16,6 +24,8 @@ usethis::use_git() # 2 "Yeah" / 3 "Yes"
 
 usethis::use_github()
 
+
+citation()
 # Packages ####
 install.packages("MuMIn")
 library(DHARMa) # To validate model
@@ -51,6 +61,10 @@ data$fSite <- factor(data$Site)
 macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
 str(macro)
 macro$fSite <- factor(macro$Site)
+
+side <- read.csv("chitons.data.csv", sep=";",dec=".", header=T)
+str(side)
+data$fSite <- factor(side$Site)
 
 
 # Data Sets Variables ####
@@ -100,8 +114,9 @@ macro$fSite <- factor(macro$Site)
 # + Worms:
 # + Zoanthus:
 
+str(data)
 summary(data)
-
+summary(data[,3:17])
 
 # Data exploration ####
 
@@ -109,57 +124,125 @@ summary(data)
 summary(data) # NO
 
 # Balanced sampling ?
-tapply(data$Chiton_F,data$fSite,length) # YES
+tapply(data$Chitons,data$fSite,length) # YES
+
+# Outliers Y & X
+
+boxplot(data$Bryo.cover)
+
+boxplot(data[,2:17])
+boxplot(sqrt(data[,2:17]))
+boxplot(decostand(data[,2:17],method="standardize"))
+
+boxplot(env.z)
+Z<-data[,3:17]
+
+library(lattice)
+dotplot(as.matrix(data[,2:17]), groups = FALSE,
+        strip = strip.custom(bg = 'white',
+                             par.strip.text = list(cex = 0.8)),
+        scales = list(x = list(relation = "free"),
+                      y = list(relation = "free"),
+                      draw = FALSE),
+        col = 1, cex  = 0.5, pch = 16,
+        xlab = "Value of the variable",
+        ylab = "Order of the data")
+
+dotplot(as.matrix(data$Samp.time))
+plot(data$Others)
+dotchart(data$Others, xlab = "Wing length (mm)",
+         ylab = "Order of the data")
+
+dotchart(as.matrix(data$Bryo.cover), xlab = "Wing length (mm)",
+         ylab = "Order of the data")
+
+identify(as.matrix(data$Others))
+
+plot(Chitons~Samp.time, data=data)
+identify(data$Chitons~data$Samp.time) #29
+View(data)
+
+# Vamos anasila-la em isolado
+
+# Make the coplot
+coplot(Chitons ~ Bryo.cover | Site, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+library(beeswarm)
+beeswarm::beeswarm(Chitons ~ Bryo.cover,data=data)
+beeswarm::beeswarm(Bryo.cover ~ Site,data=data, col="red", pch=16, method="swarm")
+
+dotchart(macro$Area.lateral, main = "AREA", group = macro$fSite)
+
+stripchart(Bryo.cover ~ Site,data=data, method="stack")
+stripchart(Chitons ~ Bryo.cover,data=data, method="stack")
+summary(data$Others)
 
 # Percentage of occupied boulders?
 
-boulders <- length(data$Chiton_F)
-occupied <- length(data$Chiton_F[data$Chiton_F!=0])
+boulders <- length(data$Chitons)
+occupied <- length(data$Chitons[data$Chitons!=0])
 percentage <- (occupied*100)/boulders
 percentage # 36.6 % occupied boulders
 
 # Chapman 2005 encontrou valor similar (30% de ocupacao)
 
-
 # Total chiton abundance:
-sum(data$Chiton_F) # 137
+sum(data$Chitons) # 137
+
+# Encounter rate
+enc.rate <- sum(data$Chitons)/sum(data$Samp.time)
+enc.rate
 
 # Chiton abundance/ reef:
-tapply(data$Chiton_F,data$fSite,sum) # Buzios eh a maior abundancia
+tapply(data$Chitons,data$fSite,sum) # Buzios eh a maior abundancia
+
+# Density/reef
+
+dens <- (tapply(data$Chitons,data$fSite,sum)/ tapply(data$Boulder.area,data$fSite,sum))*100
+dens # ind/m^2
+
 
 # Zero trouble Y ?
-table(data$Chiton_F)
-plot(table(data$Chiton_F))
-barplot(table(data$Chiton_F)) # Parece bastante zeros!
 
-# Podemos saber a proporcao de zeros aplicando o seguinte calculo:
-sum(data$Chiton_F==0)/length(data$Chiton_F)*100
+# Frequency plot
+table(data$Chitons)
+barplot(table(data$Chitons), ylim=c(0,100),
+        ylab="Frequency", xlab="Observed values")
+
+# How much zeros?
+sum(data$Chitons==0)/length(data$Chitons)*100
 
 # Proporcao dos dados que sao iguais a zero eh 63.33%
 # Pode ser possível o uso de um modelos inflacionado por zeros.
 
 
 # Vamos olhar em um histograma com a distribuicao de probabilidade
-hist(data$Chiton_F, prob = T, breaks=15)
-rug(data$Chiton_F)
-lines(density(data$Chiton_F), col="blue")
+hist(data$Chitons, prob = T, breaks=15, ylim=c(0,1))
+rug(data$Chitons)
+lines(density(data$Chitons), col="blue")
 
 # Nossa variavel resposta apresenta uma distribuicao unimodal nao normal, ja esperada para
 # dados discretos (contagem).
 # Mas  vamos examinar...
 
 # Normality Y ?
+hist(data$Chitons)
 
 # Qual seria a distribuicao normal teorica a partir da media e desvio padrao da
 # abundancia observada ?
-curve(dnorm(x, mean=mean(data$Chiton_F), sd=sd(data$Chiton_F)), add=T, col="red")
+curve(dnorm(x, mean=mean(data$Chitons), sd=sd(data$Chitons)), add=T, col="red")
 
 # Possivelmente os dados estao inflados por zeros!! Mas nao nescessariamente.
 # Ver: Warton, D. I. (2005). Many zeros does not mean zero inflation: comparing the goodness-of-fit of parametric models to multivariate abundance data. Environmetrics 16(3), 275-289
 
 # Vamos ver em um QQ-plot:
-qqnorm(data$Chiton_F)
-qqline(data$Chiton_F, col="blue", lwd=2)
+qqnorm(data$Chitons)
+qqline(data$Chitons, col="blue", lwd=2)
 
 # Noossa!! Nem um pouco normal!
 
@@ -168,7 +251,7 @@ qqline(data$Chiton_F, col="blue", lwd=2)
 
 # QQ-plot com distribuicao Poisson
 library(car)
-qqPlot(data$Chiton_F, distribution="pois", lambda=mean(data$Chiton_F))
+qqPlot(data$Chitons, distribution="pois", lambda=mean(data$Chitons))
 
 # Os dados caem fora do limite da distribuicao de Poisson.
 # E bem possivel que um glm Poisson, nao se ajuste bem aos dados.
@@ -183,13 +266,18 @@ qqPlot(data$Chiton_F, distribution="pois", lambda=mean(data$Chiton_F))
 # aceitando-se a hipotese alternativa de nao normalidade dos dados.
 
 # Vejamos:
-shapiro.test(data$Chiton_F) # NAO NORMAL
+shapiro.test(data$Chitons) # NAO NORMAL
 
 # Conforme vizualizados, nossa variavel resposta nao possui uma distribuicao normal,
 # portanto ha de se esperar que seus erros tambem nao sigam uma distribuicao normal
 
-# Homogeneity test:
-variancia <- tapply(data$Chiton_F,data$fSite,var)
+
+# Homogeneity Y?
+
+# Conditional boxplot
+
+boxplot(Chitons~fSite, data=data)
+variancia <- tapply(data$Chitons,data$fSite,var)
 variancia
 
 # Uma regra pratica eh que a maior variancia nao deve exceder de 3 a 4 vezes a
@@ -198,22 +286,25 @@ variancia
 variancia [2]/ variancia [1]  # A variancia de Buzios eh 66x maior que BF
 
 # Teste de Bartlett:
-bartlett.test(data$Chiton_F ~ data$fSite) # H0 aceita (Homocedastica)
+bartlett.test(data$Chitons ~ data$fSite) # H0 aceita (Homocedastica)
 
 # Teste de Fligner-Killeen:
-fligner.test(data$Chiton_F ~ data$fSite) # H0 aceita (Homocedastica)
+fligner.test(data$Chitons ~ data$fSite) # H0 aceita (Homocedastica)
 
 library(car)
-leveneTest(Chiton_F ~ fSite, data=data, center=mean) # H0 aceita (Homocedastica)
+leveneTest(Chitons ~ fSite, data=data, center=mean) # H0 aceita (Homocedastica)
+
+
+
 
 # Ha diferenca entre praias?
 
-kruskal.test(Chiton_F ~ fSite,
+kruskal.test(Chitons ~ fSite,
              data = data) # H0 rejeitada, ha diferenca entre praias
 
 # Dunn test:
 library(FSA)
-DT = dunnTest(Chiton_F ~ fSite,
+DT = dunnTest(Chitons ~ fSite,
               data=data,
               method="bh")      # Adjusts p-values for multiple comparisons;
 
@@ -232,6 +323,42 @@ cldList(P.adj ~ Comparison,
 
 
 # ~Sampling Time ####
+
+
+# Total chiton abundance:
+sum(data$Samp.time) # 137
+summary(data$Samp.time)
+sd(data$Samp.time)
+mean(data$Samp.time)
+# Chiton abundance/ reef:
+tapply(data$Chitons,data$fSite,sum) # Buzios eh a maior abundancia
+
+# Density/reef
+
+
+boxplot(data$Samp.time~data$fSite)
+beeswarm::beeswarm(Samp.time ~ Site,data=data)
+beeswarm::beeswarm(Samp.time ~ Site,data=data, col="red", pch=16, method="swarm")
+
+dotchart(data$Samp.time, main = "AREA", group = data$fSite)
+
+stripchart(Samp.time ~ Site,data=data, method="stack")
+
+
+hist(data$Samp.time, prob = T, ylim=c(0,1))
+lines(density(data$Samp.time), col="blue")
+
+library(rcompanion)
+
+x = residuals(model)
+
+plotNormalDensity(x,
+                  adjust = 1)
+
+hist(data$Samp.time)
+rug(data$Samp.time)
+
+
 tapply(data$Samp.time,data$Site,sum)
 tapply(data$Samp.time,data$Site,mean)
 tapply(data$Samp.time,data$Site,sd)
@@ -279,7 +406,7 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
-boxplot(Samp.time~fSite, data = data)
+boxplot(Chitons~fSite, data = data)
 
 # ~Temperature ####
 
@@ -293,6 +420,7 @@ tapply(data$Temp,data$Site,mean)
 tapply(data$Temp,data$Site,sd)
 
 boxplot(Temp~Site, data = data)
+dotchart(data$Temp, xlab = "Water temperature (°C)", group=data$fSite)
 
 # Normality test:
 shapiro.test(data$Temp) # Nao  normal
@@ -343,11 +471,17 @@ cldList(P.adj ~ Comparison,
         threshold = 0.05)
 
 # ~Wt.level ####
-
+summary(data)
 mean(data$Wt.level)
 sd(data$Wt.level)
 
 min(data$Wt.level)
+
+boxplot(Wt.level~Site, data = data)
+
+plot(Temp~fSite, data=data)
+
+dotchart(data$Wt.level, xlab = "Water temperature (°C)", group=data$fSite)
 
 tapply(data$Wt.level,data$fSite,mean)
 tapply(data$Wt.level,data$fSite,sd)
@@ -440,8 +574,8 @@ summary(macro$Area.total)
 mean(macro$Area.total)
 sd(macro$Area.total)
 
-tapply(macro$Area.total,macro$fSite,mean)
-tapply(macro$Area.total,macro$fSite,sd)
+tapply(data$Boulder.area,data$fSite,mean)
+tapply(data$Boulder.area,data$fSite,sd)
 
 # Normality test:
 shapiro.test(macro$Area.total) # Nao  normal
@@ -505,10 +639,17 @@ kruskal.test(Area.lateral ~ Site,
              data = macro) # H0 aceita, nao ha diferenca entre praias
 
 # ~Cov.Flu ####
-mean(macro$Cov.Flu)
-sd(macro$Cov.Flu)
-tapply(macro$Cov.Flu,macro$fSite,mean)
-tapply(macro$Cov.Flu,macro$fSite,sd)
+
+boulders <- length(data$Site)
+occupied <- length(data$Flu.cover[data$Flu.cover!=0])
+percentage <- (occupied*100)/boulders
+percentage # 36.6 % occupied boulders
+
+
+mean(data$Flu.cover)
+sd(data$Flu.cover)
+tapply(data$Flu.cover,data$fSite,mean)
+tapply(data$Flu.cover,data$fSite,sd)
 
 # Normality test:
 shapiro.test(macro$Cov.Flu) # Nao  normal
@@ -558,8 +699,8 @@ cldList(P.adj ~ Comparison,
         data = PT,
         threshold = 0.05)
 
-boxplot(Cov.Flu ~ Site,
-        data = macro)
+boxplot(Flu.cover ~ Site,
+        data = data)
 
 # ~Cov.UNFlu ####
 
@@ -622,9 +763,19 @@ boxplot(Cov.Asc ~ Site,
         data = data)
 
 # ~Cov.Bryo ####
+
+boulders <- length(data$Site)
+occupied <- length(data$Bryo.cover[data$Bryo.cover!=0])
+percentage <- (occupied*100)/boulders
+percentage
+
 tapply(macro$Cov.Bryo,macro$fSite,mean)
 tapply(macro$Cov.Bryo,macro$fSite,sd)
 
+#Many zeros
+sum(data$Bryo.cover==0)/length(data$Bryo.cover)*100
+
+sum(length(data$Bryo.cover[data$Bryo.cover==0])/length(data$Bryo.cover))*100
 # Normality test:
 shapiro.test(macro$Cov.Bryo) # Nao  normal
 
@@ -882,14 +1033,26 @@ cldList(P.adj ~ Comparison,
 boxplot(cov.pey ~ Site,
         data = macro)
 
+# Collinearity X ?
+
+X<-data[,3:17]
+
+#install.packages("usdm")
+library(usdm)
+vif(X)
+vifcor(X)
+vifstep(X, th=3,keep = "Flu.cover") # cov.unflu excluded
+
+pairs(data[,3:17],panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
 
 # 7. Relationship X & Y ? ####
 
 # Vamos analisar por partes:
 
 # Var.abioticas primeiro
-head(data)
-pairs(data[,c(2:8)])
+head(macro)
+pairs(macro[,c(8:17)])
 
 # Funcao encontrada no help da funcao 'pairs' para plotar histogramas
 panel.hist <- function(x, ...)
@@ -1007,7 +1170,7 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 
 pairs(data[,c(3:14)], diag.panel=panel.hist, lower.panel=panel.cor)
 
-pairs(data[,c(3:14)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+pairs(data[,c(2:17)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
 
 # Correlacao entre: Temp x Cov.Spong (-0.32)
 # Correlacao entre: Wt.level x Cov.Others (-0.44)
@@ -1361,6 +1524,11 @@ env.std.pca
 
 # MODELING ####
 
+# ~at boulder scale
+
+
+
+
 # ~at side scale ####
 
 ## 1° Model ####
@@ -1371,18 +1539,12 @@ env.std.pca
 # Hipótese: maior cobertura de substratos fluorescentes (cca+peyssonnelia),
 # maiores as são as abundancias dos quítons fluorescentes.
 
-macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
-str(macro)
-macro$fSite <- factor(macro$Site)
-head(macro)
+side <- read.csv("chitons.data.csv", sep=";",dec=".", header=T)
+str(side)
+dim(side)
+side$fSite <- factor(side$Site)
 
-# Variable Y: Chiton_F
-# Variables X: Area.lateral,Cov.Flu,Cov.Asc,cov.unflu,Cov.Bryo,Cov.Spong,Cov.Others)
-# Random factor: fSite
-
-## Exploring variables ##
-
-Z<-macro[,c("Area.lateral","Cov.Flu","Cov.Asc","cov.unflu","Cov.Bryo","Cov.Spong","Cov.Others")]
+Z<-side[,c("Flu.cover","Asc.cover","Bryo.cover","Spong.cover")]
 
 #install.packages("usdm")
 library(usdm)
@@ -1390,10 +1552,675 @@ vif(Z)
 vifcor(Z)
 vifstep(Z, th=3,keep = "Cov.Flu") # cov.unflu excluded
 
-boxplot(macro[,c("Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")])
+boxplot(side[,c("Flu.cover","Asc.cover","Bryo.cover","Spong.cover")])
 
-pairs(macro[,c("Chiton_F","Area.lateral","Cov.Flu","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")],
+pairs(side[,c("Exp.side.area","Flu.cover","Asc.cover","Bryo.cover","Spong.cover")],
       panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+
+library(lattice)
+xyplot(Chitons ~ Flu.cover, data=side, type = c("p", "r"))
+xyplot(Chitons ~ Flu.cover, data=side, type = c("p", "smooth"))
+xyplot(Chitons ~ Flu.cover | fSite, data=side, type = c("p", "r"))
+
+
+M1 <- lm(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover + fSite,
+  data=side,
+)
+
+summary(M1)
+
+
+M1 <- gls(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  method = "REML",
+  data = side
+)
+
+M1 <- glm(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  method = "REML",
+  family=Pois
+  data = side
+)
+
+
+
+summary(M1)
+
+M2 <- update(M1, ~. - fSite)
+summary(M2)
+
+anova(M1, M2)
+AIC(M1,M2)
+
+# MODEL BUILDING ####
+library(nlme)
+
+modA <- gls(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  method = "REML",
+  data = side
+)
+
+modB <- lme(
+  Chitons ~  Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  data = side
+)
+
+
+modc <- lme(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover * fSite,
+  method = "REML",
+  data = side
+)
+
+summary(modB)
+
+# Summary of the models to compare
+
+summary(modA)
+summary(modB)
+
+AIC(modA,modB)
+BIC(modA,modB)
+
+library(MuMIn)
+model.sel(modA,modB, modC)
+
+anova(modA,modB)
+
+# log likelihood ratio test:
+-2*(-400.3016-(-385.3186))
+
+# Corrigindo
+0.5*(1-pchisq(29.96609,1))
+
+# Significa que se adicionamos ao modelo o efeito aleatoório a gente tem um
+# incremento significativo na qulidade do modelo.
+
+M1a <- lme(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  data = side
+)
+
+summary(M1a)
+
+
+M1b <- lme(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  weights = varIdent(form = ~ 1 | fSite),
+  data = side
+)
+
+summary(M1b)
+
+#SETP: FIXED EFFECT
+
+summary(modB)
+
+# Full
+M2.1 <- lme(
+  Chitons ~  Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+
+#Adding three-way interactions
+M2.2 <- lme(
+  Chitons ~  Flu.cover * Bryo.cover +
+    Flu.cover * Spong.cover +
+    Flu.cover * Asc.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+
+# Add two-way interactions
+M2.3 <- lme(
+  Chitons ~
+    Flu.cover * Asc.cover +
+    Flu.cover * Bryo.cover +
+    Flu.cover * Spong.cover +
+    Asc.cover * Bryo.cover +
+    Asc.cover * Spong.cover +
+    Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+# without interactions
+M2.4 <- lme(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+
+summary(M2.1)
+summary(M2.2)
+summary(M2.3)
+summary(M2.4)
+
+model.sel(M2.1,M2.2,M2.3,M2.4)
+
+anova(M2.1,M2.4)
+
+
+#Log likelihood ratio test
+
+-2*(-254.5977-(-255.8333)) # Zuur et al. (2009)
+
+# Correction:
+0.5*(1-pchisq(-2.4712,1)) # Verbeke and Molenberghs (2000)
+
+summary(M2.4) #BIC
+
+drop1(M2.4, test="Chi") # - Asc.cover
+
+M2.4a <- lme(
+  Chitons ~  Flu.cover + Bryo.cover + Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+drop1(M2.4a, test="Chi") # Spong
+
+M2.4b <- lme(
+  Chitons ~ Flu.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+summary(M2.4b) #BIC
+drop1(M2.4b, test="Chi") # - Bryo.cover
+
+M2.4c <- lme(
+  Chitons ~  Flu.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+model.sel(M2.4,M2.4a,M2.4b,M2.4c)
+anova(M2.4,M2.4c) # M2.4c elected
+
+#Log likelihood ratio test
+
+-2*(-255.8333-(-256.6482)) # Zuur et al. (2009)
+
+# Correction:
+0.5*(1-pchisq(-1.6298,1)) # Verbeke and Molenberghs (2000)
+
+
+summary(M2.4c)
+
+# Refit Model M2.4c to REML
+M3 <- lme(
+  Chitons ~  Flu.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  data = side
+)
+
+summary(M3)
+
+library(lme4)
+M3 <- lmer(Chitons ~ Flu.cover + (1|fSite),
+           data=side
+)
+
+# validation
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = M3,
+                            n = 1000)
+plot(simRes) # good
+
+# Nao validado
+
+# STEP 6: Alternative models: generalizing to Poisson
+
+library(glmmTMB)
+
+P_B4 <- glmmTMB(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+P_M2.4 <- glmmTMB(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family = poisson,
+  data = side
+)
+
+summary(P_M2.4)
+
+summary(P_B4)
+drop1(P_B4, test="Chi")
+
+P_B4.1 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover) + Spong.cover + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+P_B4.2 <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover  + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+P_B4.3a <- glmmTMB(
+  Chitons ~  Flu.cover + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+P_B4.3b <- glmmTMB(
+  Chitons ~  Flu.cover + (1|fSite),
+  family  = poisson,
+  data = side
+)
+
+model.sel(P_B4.3a,P_B4.3b)
+
+
+P_B4.4 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover)  + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+P_B4.4 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover)  + (1|fSite),
+  family  = nbinom1,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+P_B4.5 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover)  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+P_B4.5.1 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover)  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  weights = side$Live.pey,
+  data = side
+)
+
+P_B4.5.2 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover)  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  weights = side$Live.cca,
+  data = side
+)
+
+model.sel(P_B4.5,P_B4.5.1, P_B4.5.2)
+
+
+summary(P_B4.4c)
+
+summary(P_B4.4p)
+
+P_B4.4c <- glmmTMB(
+  Chitons ~  Live.cca + sqrt(Bryo.cover)  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+P_B4.4p <- glmmTMB(
+  Chitons ~  Live.pey + sqrt(Bryo.cover)  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+model.sel(P_B4.5,P_B4.4c, P_B4.4p)
+anova()
+
+summary(P_B4.4c)
+
+summary(P_B4.4p)
+
+
+P_B4.4l <- glmmTMB(
+  Chitons ~  Live.pey + Live.cca + sqrt(Bryo.cover)  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+
+
+P_B4.5 <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+summary(P_B4.2)
+drop1(P_B4.1, test="Chi")
+
+model.sel(P_B4, P_B4.1,P_B4.2, P_B4.3) #P_B4.2
+anova(P_B4.4,P_B4.5, test="Chi")
+
+model.sel(P_B4.4,P_B4.4l,P_B4.4c,P_B4.4p)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = P_B4.4p,
+                            n = 1000)
+plot(simRes) # good
+
+testDispersion(simRes)
+testUniformity(simRes)
+testQuantiles(simRes)
+plot(residuals(simRes)) # Asymptotic is good!
+
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Spong.cover)
+
+
+par(mfrow=c(1,1), mar = c(5,4,2,1))
+coplot(Chitons ~ Flu.cover | Bryo.cover, data=side,
+       ylab = "Abundance",
+       xlab = "Fluorescent cover (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+
+
+
+NB_B4 <- glmmTMB(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+NB_B4.1 <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+NB_B4.2 <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover  + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+NB_B4.3 <- glmmTMB(
+  Chitons ~  Bryo.cover  + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+NB_B4.4 <- glmmTMB(
+  Chitons ~  I(Bryo.cover^2)  + (1|fSite),
+  family  = nbinom1,
+  data = side
+)
+
+summary(NB_B4.4)
+
+model.sel(NB_B4, NB_B4.1,NB_B4.2, NB_B4.3, NB_B4.4)
+
+
+NB1_B4.4 <- glmmTMB(
+  Chitons ~ Exp.side.area + Flu.cover + Exp.side.area*Flu.cover + (1|fSite),
+  family = nbinom2,
+  data = side
+)
+
+NB2.1_B4.4 <- glmmTMB(
+  Chitons ~  Flu.cover + (1|fSite),
+  family = poisson,
+  data = side
+)
+
+summary(NB2.1_B4.4)
+
+NB2.2_B4.4 <- glmmTMB(
+  Chitons ~ Exp.side.area + Flu.cover + Exp.side.area*Flu.cover + (1|fSite),
+  family = nbinom2,
+  weights = side$Live.pey,
+  data = side
+)
+
+NB2.3_B4.4 <- glmmTMB(
+  Chitons ~ Exp.side.area + Flu.cover + Exp.side.area*Flu.cover + (1|fSite),
+  family = nbinom2,
+  weights = side$Live.cca,
+  data = side
+)
+
+summary(NB2.3_B4.4)
+model.sel(NB2_B4.4, NB2.1_B4.4,NB2.2_B4.4, NB2.3_B4.4)
+anova(NB2_B4.4, NB2.1_B4.4,NB2.2_B4.4)
+anova(NB2.2_B4.4, NB2.3_B4.4)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = P_B4.2,
+                            n = 1000)
+plot(simRes) # good
+
+testDispersion(simRes)
+testUniformity(simRes)
+testQuantiles(simRes)
+plot(residuals(simRes)) # Asymptotic is good!
+
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+
+
+NB_M2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+#*Zero inflation
+
+NB_M2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_M2c.1 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Live.pey + Bryo.cover,
+  data = side
+)
+
+NB_M2c.2 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Live.pey,
+  data = side
+)
+NB_M2c.3 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+model.sel(NB_M2c,NB_M2c.1,NB_M2c.2,NB_M2c.3)
+anova(NB_M2c, NB_M2c.2)
+
+#São parecidos mais o aic esta aumentando. Mantemos o NB_M2c
+
+# transformation
+
+NB_M2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_M2c.1 <- glmmTMB(
+  Chitons ~ sqrt(Live.pey) + sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_M2c.2 <- glmmTMB(
+  Chitons ~ sqrt(Live.pey) + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_M2c.3 <- glmmTMB(
+  Chitons ~ Live.pey +sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+model.sel(NB_M2c,NB_M2c.1,NB_M2c.2,NB_M2c.3)
+anova(NB_M2c, NB_M2c.3)
+
+# Sao diferentes. Ficamos com o NB_M2C.3
+
+# vamos validar
+
+simRes <- simulateResiduals(fittedModel = NB_M2c.3,
+                            n = 1000, plot = TRUE)
+
+# Not validate
+simRes <- simulateResiduals(fittedModel = NB_M2c.1,
+                            n = 1000, plot = TRUE)
+# validate
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+# ficou bao
+
+# vamos contrastar esse modeo transformado a aquel outr la
+
+anova(NB_M2c.1, NB_M2d)  # NB_M2d
+
+library(lattice)
+
+xyplot(Chitons~Bryo.cover, data=side,
+       type=c("g","p","smooth"))
+
+type=c("g","p","smooth"), scales=list(log=2),
+xlab="Distance from Epicenter (km)",
+ylab="Maximum Horizontal Acceleration (g)")
+
+plot(Chitons~sqrt(Bryo.cover), data=side)
+abline(Chitons~sqrt(Bryo.cover), data=side)
+
+plot(Chitons~Flu.cover, data=side)
+
+
+
+
+library(lme4)
+d <- glmer
+
+++++
+
+
+mod1 <- lme(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                  Spong.cover + Exp.side.area*Flu.cover*Bryo.cover*Spong.cover*Asc.cover,
+            random=~1|fSite, method="REML", data=side)
+
+summary(mod1)
+
+a
+
+library(glmmTMB)
+mod1 <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                  Spong.cover + Exp.side.area*Flu.cover*Bryo.cover*Spong.cover*Asc.cover +
+                  (1|fSite),family = poisson, data=side)
+
+summary(mod1)
+
+drop1(mod1, test="Chi") # Retirar interação de spong
+
+
+mod1a <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                   Spong.cover + Flu.cover*Bryo.cover*Asc.cover +
+                   (1|fSite),family = poisson, data=side)
+summary(mod1a)
+
+drop1(mod1a, test="Chi") # Spong.
+
+mod1b <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                   Flu.cover*Bryo.cover*Asc.cover +
+                   (1|fSite),family = poisson, data=side)
+summary(mod1b)
+drop1(mod1b, test="Chi") # Retirar interação
+
+
+mod1c <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                   (1|fSite),family = poisson, data=side)
+summary(mod1c)
+drop1(mod1c, test="Chi") # Asc.
+
+mod1d <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover + Bryo.cover +
+                   (1|fSite),family = poisson, data=side)
+summary(mod1d)
+
+### ~AIC Selection ####
+
+library(MuMIn)
+model.sel(mod1,mod1a,mod1b,mod1c,mod1d) # mod1b (AIC: 305)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = P_B4.2,
+                            n = 1000)
+plot(simRes) # good
+
+# b Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simRes)
+par(mfrow = c(1,3))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+
+
+
+
+
+
+
+
+
+
+## Step 1:
 
 # Transformando Area.lateral
 macro$logArea.lateral <- log(macro$Area.lateral)
@@ -1420,7 +2247,7 @@ dotplot(as.matrix(Z), groups = FALSE,
 # Vamos anasila-la em isolado
 
 # Make the coplot
-coplot(Chiton_F ~ Cov.Bryo | Site, data=macro, ylab = "Abudance",
+coplot(Chitons ~ Flu.cover | Site, data=data, ylab = "Abundance",
        xlab = "Cover Fluoescence (%)",
        panel = function(x, y, ...) {
          tmp <- lm(y ~ x, na.action = na.omit)
@@ -1428,49 +2255,305 @@ coplot(Chiton_F ~ Cov.Bryo | Site, data=macro, ylab = "Abudance",
          points(x, y) })
 
 library(beeswarm)
-beeswarm::beeswarm(Area.lateral ~ Site,data=macro)
-beeswarm::beeswarm(Area.lateral ~ Site,data=macro, col="red", pch=16, method="swarm")
+beeswarm::beeswarm(Chitons ~ Site,data=data)
+beeswarm::beeswarm(Chitons ~ Site,data=data, col="red", pch=16, method="swarm")
 
-dotchart(macro$Area.lateral, main = "AREA", group = macro$fSite)
+dotchart(data$Chitons, main = "AREA", group = data$fSite)
 
-stripchart(Area.lateral ~ Site,data=macro, method="stack")
+stripchart(Chitons ~ Site,data=data, method="stack")
 
 library(lattice)
-xyplot(Chiton_F ~ Area.lateral | Site, data=macro)
-xyplot(Chiton_F ~ Cov.Bryo | Site, data=macro, type=c("p","r"))
+xyplot(Chitons ~ Flu.cover | Site, data=data)
+xyplot(Chitons ~ Flu.cover | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Wt.level | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Boulder.area | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Exp.side.area | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Weight | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Samp.time | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Live.cca | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Live.pey | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Unflu.cover | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Dead.red.crust | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Asc.cover | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Bryo.cover | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Spong.cover | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Others | Site, data=data, type=c("p","r"))
+xyplot(Chitons ~ Fissu | Site, data=data, type=c("p","r"))
+
+summary(data)
+str(data)
+coplot(Chitons ~ Flu.cover | Bryo.cover*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+coplot(Chitons ~ Flu.cover | Exp.side.area*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+
+coplot(Chitons ~ Flu.cover | Weight*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+##
+
+coplot(Chitons ~ Asc.cover | Boulder.area*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+coplot(Chitons ~ Asc.cover | Exp.side.area*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+
+coplot(Chitons ~ Asc.cover | Weight*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+##
+
+coplot(Chitons ~ Spong.cover | Boulder.area*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+coplot(Chitons ~ Spong.cover | Exp.side.area*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+
+coplot(Chitons ~ Spong.cover | Weight*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+##
+
+coplot(Chitons ~ Dead.red.crust | Weight*Wt.level, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+install.packages("ggcleveland")
+library(ggcleveland)
+library(ggplot2)
+
+gg_coplot(data, x=Dead.red.crust, y=Chitons, faceting = Wt.level)
+
+
 
 xyplot(Area.lateral ~Cov.Flu| Site, data=macro, type=c("p","r"))
+
+par(mfrow=c(1,1))
+plot(Chitons ~ Weight, data=data)
+
+library(ggplot2)
+
+ggplot(data=data,                ### The data frame to use.
+       aes(x = Flu.cover,
+           y = Chitons)) + geom_point() + facet_wrap(~Site) +
+  coord_cartesian(xlim =c(0, 100))
+
+
+pairs(data[,c(2:17)], panel=panel.smooth, diag.panel=panel.hist, lower.panel=panel.cor)
+
+
 
 
 ### ~GLMM Poisson ####
 
-str(macro)
+str(side)
 library(pscl)
 
-f.full <- formula(Chiton_F ~ Area.lateral + Cov.Flu  + Cov.Asc + Cov.Bryo
-              + Cov.Spong + (1|fSite))
+f.full <- formula(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover +
+                    Bryo.cover + Spong.cover +
+                    Exp.side.cover*Flu.cover*Bryo.cover*Spong.cover*Asc.cover +
+                    (1|fSite))
 
 library(glmmTMB)
-mod1 <- glmmTMB(f.full,family = poisson, data=macro)
+mod1 <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                  Spong.cover + Exp.side.area*Flu.cover*Bryo.cover*Spong.cover*Asc.cover +
+                  (1|fSite),family = poisson, data=side)
 summary(mod1)
 
-drop1(mod1, test="Chi") # Cov. Asc
-f1 <- update(f.full,.~.-Cov.Asc)
+drop1(mod1, test="Chi") # Retirar interação de spong
 
-mod1a <- glmmTMB(f1, family = poisson, data=macro)
+
+mod1a <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                   Spong.cover + Flu.cover*Bryo.cover*Asc.cover +
+                   (1|fSite),family = poisson, data=side)
 summary(mod1a)
 
-drop1(mod1a, test="Chi") # Cov. Spong
-f2 <- update(f1,.~.-Cov.Spong)
+drop1(mod1a, test="Chi") # Spong.
 
-mod1b <- glmmTMB(f2, family = poisson, data=macro)
+mod1b <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                   Flu.cover*Bryo.cover*Asc.cover +
+                   (1|fSite),family = poisson, data=side)
 summary(mod1b)
+drop1(mod1b, test="Chi") # Retirar interação
+
+
+mod1c <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover  + Asc.cover + Bryo.cover +
+                              (1|fSite),family = poisson, data=side)
+summary(mod1c)
+drop1(mod1c, test="Chi") # Asc.
+
+mod1d <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover + Bryo.cover +
+                   (1|fSite),family = poisson, data=side)
+summary(mod1d)
 
 ### ~AIC Selection ####
 
 library(MuMIn)
-model.sel(mod1, mod1a, mod1b) # mod1b (AIC: 305)
-anova(mod1, mod1a, mod1b, test="Chi")
+model.sel(mod1,mod1a,mod1b,mod1c,mod1d) # mod1b (AIC: 305)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = mod1d,
+                            n = 1000)
+plot(simRes) # good
+
+# b Detecting missing predictors or wrong functional assumptions
+
+testUniformity(simulationOutput = simulationOutput)
+par(mfrow = c(1,3))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+
+library(mgcv)
+mod1d_gamm <- gamm(Chitons ~ Exp.side.area + Flu.cover+ s(Bryo.cover),
+                random=list(Site=~1), family = poisson, data=side)
+
+summary(mod1d_gamm$gam) # estrutura fixed do modelo
+plot(mod1d_gamm$gam)
+
+summary(mod1d_gamm$lme) # estrutura aleatoria do modelo
+plot(mod1d_gamm$gam)
+
+par(mfrow=c(2,2))
+gam.check(mod1d_gamm$gam)
+par(mfrow=c(1,1))
+
+Resgam <- resid(mod1d_gamm$gam, type="pearson")
+Reslme <- resid(mod1d_gamm$lme, type="normalized")
+
+plot(Resgam ~ side$Bryo.cover)
+plot(Reslme~side$Bryo.cover)
+
+plot(sqrt(side$Bryo.cover)~sqrt(fitted(mod1d_gamm$gam)))
+plot(sqrt(side$Bryo.cover)~sqrt(fitted(mod1d_gamm$lme)))
+
+plot(Resgam~sqrt(fitted(mod1d_gamm$gam)))
+plot(residuals(mod1d_gamm$gam, type="pearson")~sqrt(fitted(mod1d_gamm$gam)))
+
+plot(Reslme~sqrt(fitted(mod1d_gamm$lme)))
+
+plot(residuals(mod1d_gamm$gam, type="response")~sqrt(fitted(mod1d_gamm$gam)))
+plot(residuals(mod1d_gamm$lme, type="response")~sqrt(fitted(mod1d_gamm$lme)))
+
+library(gamm4)
+mod1d_gamm4 <- gamm4(Chitons ~ Exp.side.area + Flu.cover+ s(Bryo.cover),
+                     random= ~(1|Site), family = poisson, data=side)
+
+summary(mod1d_gamm4$gam) # estrutura fixed do modelo
+plot(mod1d_gamm4$gam)
+
+summary(mod1d_gamm4$mer) # estrutura aleatoria do modelo
+plot(mod1d_gamm4$mer)
+
+par(mfrow=c(2,2))
+gam.check(mod1d_gamm4$gam)
+par(mfrow=c(1,1))
+
+Resgam4 <- resid(mod1d_gamm4$gam, type="pearson")
+Resmer <- resid(mod1d_gamm4$mer, type="deviance")
+
+plot(Resgam4 ~ side$Bryo.cover)
+plot(Resmer~side$Bryo.cover)
+
+mod1d_gamm4nb <- gamm4(Chitons ~ Exp.side.area + Flu.cover+ s(Bryo.cover),
+                     random= ~(1|Site), family = negbin(1), data=side)
+
+
+summary(mod1d_gamm4nb$gam) # estrutura fixed do modelo
+plot(mod1d_gamm4nb$gam)
+
+summary(mod1d_gamm4nb$mer) # estrutura aleatoria do modelo
+plot(mod1d_gamm4nb$mer)
+
+par(mfrow=c(2,2))
+gam.check(mod1d_gamm4nb$gam)
+par(mfrow=c(1,1))
+
+Resgam4nb <- resid(mod1d_gamm4nb$gam, type="pearson")
+Resmernb <- resid(mod1d_gamm4nb$mer, type="deviance")
+
+plot(Resgam4nb ~ side$Bryo.cover)
+plot(Resmernb~side$Bryo.cover)
+
+
+
+mod1b1 <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover +
+                    I(Bryo.cover^2) + Others + (1|fSite),
+                  family = nbinom1, data=side)
+
+summary(mod1b1)
+drop1(mod1b1, test="Chi")
+
+install.packages("mgcv")
+install.packages("mgcVis")
+library(mgcv)
+
+gammod2 <- gamm(Chitons ~ Exp.side.area + Bryo.cover + s(Live.cca) + s(Live.pey),
+                random=list(fSite=~1), family = poisson, data=side)
+
+gam.check(gammod2$gam)
+
+mod1b3 <- glmmTMB(Chitons ~ Exp.side.area + Flu.cover +
+                    Bryo.cover + (1|fSite), ziformula = ~ Bryo.cover,
+                  family = poisson, data=side)
+
+summary(mod1b3)
+
+drop1
+mod1b4 <- glmmTMB(Chitons ~ log(Exp.side.area) + Flu.cover +
+                     I(Others^2) + (1|fSite), ziformula = ~ Others,
+                  family = poisson, data=side)
+
+
+
+### ~AIC Selection ####
+
+library(MuMIn)
+model.sel(mod1,mod1a,mod1b) # mod1b (AIC: 305)
+anova(mod1a,mod1b, test="Chi")
 
 #install.packages("AICcmodavg")
 library(AICcmodavg)
@@ -1495,15 +2578,21 @@ r.squaredGLMM(mod1b)
 #install.packages("DHARMa")
 library(DHARMa)
 
+?simulateResiduals
 simulationOutput <- simulateResiduals(fittedModel = mod1b,
-                                      plot=T)
+                                      plot=T, n=1000)
 
+plot(simulationOutput, quantreg = T)
+simulationOutput <- simulateResiduals(fittedModel = mod1b, re.form = NULL, plot=T)
+testDispersion(simulationOutput)
+testUniformity(simulationOutput = simulationOutput)
+testQuantiles(simulationOutput)
 plot(residuals(simulationOutput)) # Asymptotic is good!
-plotResiduals(simulationOutput, form = macro$Cov.Flu)
+plotResiduals(simulationOutput, form = side$Flu.cover)
 
 
 # a. Randomizacoes:
-simRes <- simulateResiduals(fittedModel = mod1b,
+simRes <- simulateResiduals(fittedModel = nbimod2log,
                             n = 1000)
 plot(simRes) # good
 
@@ -1511,18 +2600,123 @@ plot(simRes) # good
 
 testUniformity(simulationOutput = simulationOutput)
 par(mfrow = c(1,3))
-plotResiduals(simulationOutput, macro$Cov.Flu)
-plotResiduals(simulationOutput, macro$Cov.Bryo)
-plotResiduals(simulationOutput, macro$Area.lateral)
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+plotResiduals(simRes, side$Live.pey)
+
+par(mfrow = c(1,1))
+boxplot(side$Bryo.cover)
+
+library(lattice)
+dotplot(as.matrix(side$Bryo.cover), groups = FALSE,
+        strip = strip.custom(bg = 'white',
+                             par.strip.text = list(cex = 0.8)),
+        scales = list(x = list(relation = "free"),
+                      y = list(relation = "free"),
+                      draw = FALSE),
+        col = 1, cex  = 0.5, pch = 16,
+        xlab = "Value of the variable",
+        ylab = "Order of the data")
+
+dotplot(as.matrix(side$Bryo.cover))
+plot(side$Bryo.cover)
+dotchart(side$Bryo.cover, xlab = "Wing length (mm)",
+         ylab = "Order of the data")
+
+dotchart(as.matrix(data$Samp.time), xlab = "Wing length (mm)",
+         ylab = "Order of the data")
+
+identify(as.matrix(data$Others))
+
+plot(Chitons~Samp.time, data=data)
+identify(data$Chitons~data$Samp.time) #29
+View(data)
+
+# Vamos anasila-la em isolado
+
+# Make the coplot
+coplot(Chitons ~ Bryo.cover | Site, data=data, ylab = "Abudance",
+       xlab = "Cover Fluoescence (%)",
+       panel = function(x, y, ...) {
+         tmp <- lm(y ~ x, na.action = na.omit)
+         abline(tmp)
+         points(x, y) })
+
+library(beeswarm)
+beeswarm::beeswarm(Others ~ Site,data=data)
+beeswarm::beeswarm(Area.lateral ~ Site,data=macro, col="red", pch=16, method="swarm")
+
+dotchart(macro$Area.lateral, main = "AREA", group = macro$fSite)
+
+stripchart(Others ~ Site,data=data, method="stack")
+summary(data$Others)
+
+# Percentage of occupied boulders?
+
+boulders <- length(data$Chitons)
+occupied <- length(data$Chitons[data$Chitons!=0])
+percentage <- (occupied*100)/boulders
+percentage # 36.6 % occupied boulders
+
+# Chapman 2005 encontrou valor similar (30% de ocupacao)
+
+# Total chiton abundance:
+sum(data$Chitons) # 137
+
+# Chiton abundance/ reef:
+tapply(data$Chitons,data$fSite,sum) # Buzios eh a maior abundancia
+
+# Density/reef
+
+dens <- (tapply(data$Chitons,data$fSite,sum)/ tapply(data$Boulder.area,data$fSite,sum))*100
+dens # ind/m^2
+
+
+# Zero trouble Y ?
+
+# Frequency plot
+table(data$Chitons)
+barplot(table(data$Chitons), ylim=c(0,100),
+        ylab="Frequency", xlab="Observed values")
+
+# How much zeros?
+sum(data$Chitons==0)/length(data$Chitons)*100
+
+# Proporcao dos dados que sao iguais a zero eh 63.33%
+# Pode ser possível o uso de um modelos inflacionado por zeros.
+
+
+# Vamos olhar em um histograma com a distribuicao de probabilidade
+hist(data$Chitons, prob = T, breaks=15, ylim=c(0,1))
+rug(data$Chitons)
+lines(density(data$Chitons), col="blue")
+
+
+
+
+
+
+####
+
+plotResiduals(simulationOutput, rank = TRUE, quantreg = FALSE)
+
+
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+plotResiduals(simRes, side$Others)
 
 # c. Teste para inflacao de zero
 par(mfrow = c(1,1))
-testZeroInflation(simulationOutput)
+testZeroInflation(simulationOutput, plot=T)
 
 # d. Dispersion
 testDispersion(mod1b)
 testDispersion(simRes)
-testOutliers(simulationOutput = simulationOutput)
+testDispersion(simulationOutput)
+testOutliers(simulationOutput = simulationOutput, plot = T)
+testDispersion(simulationOutput, type = "PearsonChisq", alternative = "greater")
 
 # e. spatial autocorrelation # DEU ERRO
 
@@ -1537,6 +2731,13 @@ testSpatialAutocorrelation(simulationOutput, x=macro$Chiton_F, macro$Cov.Flu)
 dM = as.matrix(dist(cbind(macro$x, macro$y)))
 testSpatialAutocorrelation(simulationOutput, distMat = dM)
 
+residuals(simulationOutput)
+bygroup <- recalculateResiduals(simulationOutput, group=macro$Site)
+
+# calculating x, y positions per group
+groupLocations = aggregate(macro[, 18:19], list(macro$Site), mean)
+testSpatialAutocorrelation(bygroup, x=groupLocations$, macro$y)
+
 
 install.packages("sfsmisc")
 library(sfsmisc)
@@ -1549,7 +2750,6 @@ testSpatialAutocorrelation(simulationOutput = simulationOutput, x = testData$x, 
 
 
 
-
 ## CONCLUIDO ###
 
 ## 2° MODEL ####
@@ -1559,14 +2759,376 @@ testSpatialAutocorrelation(simulationOutput = simulationOutput, x = testData$x, 
 
 # Hipótese: nao havera influencia especie especifica.
 
-macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
-str(macro)
-macro$fSite <- factor(macro$Site)
+side <- read.csv("chitons.data.csv", sep=";",dec=".", header=T)
+str(side)
+side$fSite <- factor(side$Site)
 
-# Variable Y: Chiton_F
-# Variables X: Area.lateral, Cov.Asc,Cov.Bryo,Cov.Spong,Cov.Others, cov.cca, cov.pey)
-# Random factor: fSite
+Z<-side[,c("Exp.side.area","Bryo.cover","Live.cca","Live.pey")]
 
+#install.packages("usdm")
+library(usdm)
+vif(Z)
+vifcor(Z)
+
+#STEP 1: Fitting a ‘loaded’ mean structure model
+
+Mod1 <- gls(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  method = "REML",
+  data = side
+)
+
+summary(Mod1)
+
+Mod2 <- lme(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  data = side
+)
+
+summary(M2)
+# Summary of the models to compare
+AIC(Mod1,Mod2)
+##    df      AIC
+## M1 17 709.8261
+## M2 18 685.3470
+AIC values suggest using random effect in ‘fSite’.
+
+BIC(M1,M2)
+##    df      BIC
+## M1 17 754.7807
+## M2 18 732.9460
+BIC values suggest the same.
+
+model.sel(M1,M2)
+anova(Mod1,Mod2)
+
+#STEP 3: Finding the optimal fixed structure
+
+Mod2 <- lme(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+Mod2a <- lme(
+  Chitons ~ Live.cca*Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+summary(Mod2a)
+model.sel(M1,M2)
+anova(Mod2,Mod2a)
+
+# Step 3
+
+P_Mod2 <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+summary(P_Mod2)
+drop1(P_Mod2, test = "Chi") # Asc.cover
+
+P_Mod2a <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Spong.cover + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+summary(P_Mod2a)
+drop1(P_Mod2a, test = "Chi")
+
+P_Mod2b <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+summary(P_Mod2b)
+drop1(P_Mod2b, test = "Chi")
+
+model.sel(P_Mod2,P_Mod2a,P_Mod2b)
+anova(P_Mod2, P_Mod2b)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = P_Mod2,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+# Step Bnigative
+
+NB_Mod2 <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_Mod2)
+drop1(NB_Mod2, test = "Chi") # Asc.cover
+
+NB_Mod2a <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Spong.cover + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_Mod2a)
+drop1(NB_Mod2a, test = "Chi")
+
+NB_Mod2b <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_Mod2b)
+drop1(NB_Mod2b, test = "Chi")
+
+NB_Mod2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_Mod2c)
+drop1(NB_Mod2c, test = "Chi")
+
+NB_Mod2d <- glmmTMB(
+  Chitons ~ Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_Mod2d)
+
+
+model.sel(NB_Mod2,NB_Mod2a,NB_Mod2b, NB_Mod2c, NB_Mod2d)
+anova(P_Mod2, P_Mod2b)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = NB_Mod2d,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+# Step transformation
+
+
+NB_Mod2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Live.pey + Bryo.cover,
+  data = side
+)
+
+NB_Mod2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Live.pey,
+  data = side
+)
+
+NB_Mod2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+# TESTEI CADA UMA DAS VARIAVEIS COMO ZERO INFLADO E NAO CONTRIBUIU PARA O MODELO
+
+NB_Mod2c1 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_Mod2c2 <- glmmTMB(
+  Chitons ~ sqrt(Live.pey) + sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_Mod2c3 <- glmmTMB(
+  Chitons ~ sqrt(Live.pey) + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_Mod2c4 <- glmmTMB(
+  Chitons ~ Live.pey + sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+model.sel(NB_Mod2c1,NB_Mod2c2,NB_Mod2c3,NB_Mod2c4, NB_Mod2d)
+
+
+NB_Mod2d <- glmmTMB(
+  Chitons ~ Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+NB_Mod2d2 <- glmmTMB(
+  Chitons ~ sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+summary(NB_Mod2d)
+
+
+model.sel( NB_Mod2d, NB_Mod2d2)
+anova(P_Mod2, P_Mod2b)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = NB_Mod2d,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+-----
+library(pscl)
+f.full <- formula(Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover +
+                    Bryo.cover + (1|fSite))
+
+
+library(glmmTMB)
+mod2 <- glmmTMB(f.full,family = poisson, data=side)
+summary(mod2)
+
+drop1(mod2, test)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = mod2,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+plotResiduals(simRes, side$Live.pey)
+
+
+mod2a <- glmmTMB(Chitons ~ Exp.side.area + Live.cca + Live.pey +
+  Bryo.cover + (1|fSite), ziformula = ~Bryo.cover, family=nbinom1, data=side)
+
+summary(mod2a)
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = mod2a,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+plotResiduals(simRes, side$Live.pey)
+
+mod2b <- glmmTMB(Chitons ~ Exp.side.area + Live.cca + Live.pey + Bryo.cover +
+                   (1|fSite), family=nbinom1, data=side)
+
+summary(mod2b)
+drop1(mod2b, test = "Chi") # Live.cca
+
+
+mod2c <- glmmTMB(Chitons ~ Exp.side.area + Live.pey + Bryo.cover +
+                   (1|fSite), family=nbinom1, data=side)
+summary(mod2c)
+drop1(mod2c, test="Chi")# Live.pey
+
+mod2d <- glmmTMB(Chitons ~ Exp.side.area + Bryo.cover +
+                   (1|fSite), family=nbinom1, data=side)
+
+summary(mod2d)
+
+library(MuMIn)
+model.sel(mod2,mod2a,mod2b, mod2c,mod2d) # mod2bcd
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = mod2d,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+plotResiduals(simRes, side$Live.pey)
+
+
+
+
+library(DHARMa)
+simRes <- simulateResiduals(fittedModel = mod2b,
+                            n = 1000)
+plot(simRes)
+
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Exp.side.area)
+plotResiduals(simRes, side$Live.pey)
+
+
+
+
+nbimod2 <- glmmTMB(f.full,family = nbinom2, data=side)
+summary(nbimod2)
+
+nbimod2log <- glmmTMB(Chitons ~ Exp.side.area + log(Live.cca) + Live.pey +
+                        Bryo.cover + (1|fSite), family = nbinom1, data=side)
+summary(nbimod2log)
+
+drop1(nbimod2, test="Chi") # Live.cca
+f1 <- update(f.full,.~.-Live.cca)
+nbimod2a <- glmmTMB(f1, family = nbinom2, data=side)
+summary(nbimod2a)
+
+drop1(nbimod2a, test="Chi") # Live.pey
+f2 <- update(f1,.~.-Live.pey)
+nbimod2b <- glmmTMB(f2, family = nbinom2, data=side)
+summary(nbimod2b)
+
+
+
+library(MuMIn)
+model.sel(nbimod2,nbimod2a,nbimod2b) # mod1b (AIC: 305)
+anova(mod1a,mod1b, test="Chi")
+
+
+
+
+
+
+
+
+
+
+
+
+####
 ## Exploring variables ##
 
 Z<-macro[,c("Area.lateral","cov.cca","cov.pey","Cov.Asc","Cov.Bryo","Cov.Spong","Cov.Others")]
@@ -1742,14 +3304,71 @@ evidence.ratio # 1.22 Ou seja o mod1b eh somente 1.22 vezes mais provavel de ser
 
 # Mod.averaging
 mod.sel <- model.sel(mod1, mod1a, mod1b, mod2, mod2a, mod2b, mod2c, mod2d)
-summary(model.avg(mod.sel, subset = delta < 2))
+summary(model.avg(mod.sel, subset = delta < 1))
+
+## AQUII CONCLUIDO ####
+
+P_M1a.4 <- glmmTMB(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family = poisson,
+  data = side
+)
+
+P_M2a <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+options(na.action = "na.fail")
+mod.sel <- dredge(P_M1a.4)
+mod.sel2 <- model.sel(P_M2b,P_M2c)
+evidence.ratio <- 0.416/0.245
+evidence.ratio
+
+get.models(mod.sel2, subset = delta < 1)
+subset(mod.sel, delta < 1)
+par(mar = c(3,5,6,4))
+plot(mod.sel, labAsExpr = TRUE)
+
+model.avg(mod.sel, subset = delta < 1)
+summary(model.avg(mod.sel2, subset = delta < 1))
+sw(mod.sel)
+summary(model.avg(mod.sel, subset = cumsum(weight) <= .95))
+
+summary(get.models(mod.sel, 1)[[1]])
 
 
-## CONCLUIDO ###
+#install.packages("AICcmodavg")
+library(AICcmodavg)
+
+#setup a subset of models of Table 1
+Cand.models <- list(P_M2a,P_M2b,P_M2c)
+
+##create a vector of names to trace back models in set
+Modnames <- paste("mod", 1:length(Cand.models), sep = " ")
+
+##generate AICc table
+aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE)
+
+##round to 4 digits after decimal point and give log-likelihood
+print(aictab(cand.set = Cand.models, modnames = Modnames, sort = TRUE),
+      digits = 4, LL = TRUE)
+
+r.squaredGLMM(mod2b)
+r.squaredGLMM(mod2c)
+
+modavg(parm = "Live.pey", cand.set = Cand.models, modnames = Modnames)
+print(modavg(parm = "Live.pey", cand.set = Cand.models,
+             modnames = Modnames), digits = 4)
+print(modavg(parm = "Live.cca", cand.set = Cand.models,
+             modnames = Modnames), digits = 4)
+print(modavg(parm = "Live.pey:Live.cca", cand.set = Cand.models,
+             modnames = Modnames), digits = 4)
 
 
 
-## Model Plus ####
+## Model Co-occurence ####
 # NAO VAi ENTRAR NO ARTIGO
 
 # O objetivo eh investigar se eh possivel determinar a abundância dos quítons com
@@ -1766,14 +3385,20 @@ summary(model.avg(mod.sel, subset = delta < 2))
 
 macro <- read.csv("rockside.csv", sep=";",dec=".", header=T)
 str(macro)
-
+dim(macro)
 
 # Tranformando os dados de abundancias de coespecies em presenca-ausencia:
 
 library(vegan) # decostand() function
 
-macro.pa <- decostand(macro[,15:29], "pa")
-macro.pa <- cbind(macro[,1:14],macro.pa)
+head(data)
+summary(data[,18:36])
+macro.pa <- decostand(data[,18:36], "pa")
+head(macro.pa)
+sums <- colSums(macro.pa)
+print(sums)
+
+macro.pa <- cbind(macro[,1:19],macro.pa)
 str(macro.pa)
 macro.pa$fSite <- factor(macro.pa$Site)
 
@@ -1810,10 +3435,6 @@ str(macro.mx)
 specie <- c("Bryo","Asci","Bival","Crabs","Shrimp","Worms","Spong",
             "Urchins","Brittle","Coral","Zoanthus","Flatworm","Hermit","Fissu")
 
-
-library(pscl)
-f.full <- formula(Chiton_F ~ Bryo+Asci+Bival+Crabs+Shrimp+Worms+Spong+Urchins+
-                    Brittle+Coral+Zoanthus+Flatworm+Hermit+Fissu + (1|fSite))
 
 ### ~GLMM Poisson ####
 
@@ -2016,6 +3637,55 @@ simRes <- simulateResiduals(fittedModel = nb13,
 plot(simRes) # Ajusted
 
 model.sel(mod2h,nb13) # nb13 menor AIC
+
+
+## Model Global boulder scale ####
+
+library(pscl)
+f.full <- formula(Chiton_F ~ Weight + Area.total + Temp + Cov.Flu + Cov.Bryo + Crabs + Fissu + (1|fSite))
+
+### ~GLMM Poisson ####
+
+library(glmmTMB)
+mod4 <- glmmTMB(f.full,family = poisson, data=macro)
+summary(mod4)
+
+drop1(mod4, test="Chi") #
+f1 <- update(f.full,.~.-Weight)
+mod4a <- glmmTMB(f1, family=poisson, data=macro)
+summary(mod4a)
+
+drop1(mod4a, test="Chi") #
+f2 <- update(f1,.~.-Fissu)
+mod4b <- glmmTMB(f2, family=poisson, data=macro)
+summary(mod4b)
+
+drop1(mod4b, test="Chi") #
+f3 <- update(f2,.~.-Cov.Flu)
+mod4c <- glmmTMB(f3, family=poisson, data=macro)
+summary(mod4c)
+
+drop1(mod4c, test="Chi") #
+f4 <- update(f3,.~.-Temp)
+mod4d <- glmmTMB(f4, family=poisson, data=macro)
+summary(mod4d)
+
+library(MuMIn)
+model.sel(mod4,mod4a,mod4b,mod4c,mod4d)
+anova(mod2,mod2a,mod2b,mod2c,mod2d,mod2e,mod2f,mod2g,mod2h,mod2i,mod2j,mod2l, test="Chi")
+
+#### + Model Validation ####
+
+#install.packages("DHARMa")
+library(DHARMa)
+simulationOutput <- simulateResiduals(fittedModel = mod4d)
+plot(simulationOutput) # Not ajusted
+
+# a. Randomizacoes:
+simRes <- simulateResiduals(fittedModel = mod2d,
+                            n = 1000)
+plot(simRes) # Not ajusted
+
 
 ## CONCLUIDO ###
 
@@ -2905,3 +4575,39 @@ Correlog <- spline.correlog(x = macro$x,
 
 plot(Correlog)
 summary(Correlog)
+
+
+dd <- read.csv("ex1.csv")
+fit_lmer <- lmer(y ~ period + cat1 + (1|year), data=dd, weights=1/dd$sdvals^2)
+fit_gtmb <- glmmTMB(y ~ period + cat1 + (1|year), data=dd, weights=1/dd$sdvals^2)
+fit_lme <- lme(y ~ period + cat1, random = ~1|year, data=dd,
+               weights=varFixed(~I(sdvals^2)))
+
+summary(fit_lmer)
+summary(fit_gtmb)
+summary(fit_lme)
+
+unlist(VarCorr(fit_lmer))     ## 0.004378528
+unlist(VarCorr(fit_gtmb))     ## 0.1330326
+c(unlist(getVarCov(fit_lme))) ## 0.004378533
+
+
+install.packages("glmm.hp")
+library(glmm.hp)
+library(MuMIn)
+library(lme4)
+mod1 <- lmer(Sepal.Length ~ Petal.Length + Petal.Width+(1|Species),data = iris)
+summary(mod1)
+r.squaredGLMM(mod1)
+glmm.hp(mod1)
+a <- glmm.hp(mod1)
+plot(a)
+mod2 <- glm(Sepal.Length ~ Petal.Length + Petal.Width, data = iris)
+r.squaredGLMM(mod2)
+glmm.hp(mod2)
+b <- glmm.hp(mod2)
+plot(b)
+plot(glmm.hp(mod2))
+mod3 <- lm(Sepal.Length ~ Petal.Length + Petal.Width + Petal.Length:Petal.Width, data = iris)
+glmm.hp(mod3,type="R2")
+glmm.hp(mod3,commonality=TRUE)

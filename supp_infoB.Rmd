@@ -1,0 +1,1140 @@
+---
+title: "Supp_B_Ecological_Models"
+author: "G.Grimaldi"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+**Load packages**
+
+```{r message=FALSE, warning=FALSE}
+library(AICcmodavg) # for aictab()
+library(beeswarm)   # for beeswarm()
+library(DHARMa)     # for model validation
+library(glmmTMB)    # for glmmTMB()
+library(lme4)       # for lmer()
+library(MuMIn)      # for model.sel()
+library(nlme)       # for gls(); lme()
+library(pscl)
+library(usdm)       # for vifcor()
+
+```
+
+**Dataset**: "chitons.data.csv"
+
+```{r echo=TRUE, results='hide'}
+side <- read.csv("chitons.data.csv", sep=";",dec=".", header=T)
+str(side)
+side$fSite <- factor(side$Site)
+```
+
+*Obs*: You can find the description of the variables in Supplementary Material A.
+
+# I. Question 1
+
+**Objective**: Investigate whether the abundance of fluorescent chitons ('*Chitons*') is influenced by the fluorescent substrate covering the sides of the boulders they inhabit.
+
+**Hypothesis**: The abundance of fluorescent chitons increases with greater fluorescent substrate coverage on the sides of boulders.
+
+Our exploratory analysis detected collinearity between the variables '*Flu.cover*'~'*Unflu.cover*' (see Supplementary Material A). As a result, we decided to remove the latter. Additionally, we chose to remove '*Others*' due to its confusing nature, as it combines several categories of substrates, including unidentified ones.
+
+So, we have:
+
+**Response**: '*Chitons*'.
+
+**Predictors**: '*Flu.cover*', '*Asc.cover*', '*Bryo.cover*', and '*Spong.cover*'.
+
+**Variance Inflation Factor:**
+```{r echo=FALSE}
+# Variance Inflation Factor
+Z <- side[,c("Flu.cover","Asc.cover","Bryo.cover","Spong.cover")]
+vifcor(Z)
+```
+
+**MODEL BUILDING**
+
+We opted for a top-down strategy (West *et al.*, 2022).
+
+**STEP 1: Fitting a 'loaded' mean structure model.**
+
+```{r results='hide'}
+# Adding full interactions:
+M1 <- gls(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  method = "REML",
+  data = side
+)
+
+summary(M1)
+```
+
+**STEP 2: Including a structure for the random effects.**
+
+Our exploratory analysis revealed a clear distinction in the abundance of chitons among the reefs, with "Búzios" standing out from the rest. To isolate this effect, we will include '*Sites*' as a random factor in the model M1 and test if this inclusion significantly improves the model fit.
+
+```{r results='hide'}
+# Adding random effect:
+M1a <- lme(
+  Chitons ~ Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  data = side
+)
+
+summary(M1a)
+```
+
+*Akaike information criterion (AIC):*
+```{r warning=FALSE}
+# Akaike information criterion (AIC):
+AIC(M1,M1a)
+```
+
+AIC values suggest using random effect in '*fSite*'.
+
+*Bayesian Information Criteria (BIC):*
+```{r warning=FALSE}
+# Bayesian Information Criteria (BIC)
+BIC(M1,M1a)
+```
+
+BIC values suggest the same.
+
+*Model selection:*
+```{r}
+model.sel(M1,M1a)
+```
+
+*Anova test:*
+```{r warning=FALSE}
+anova(M1,M1a)
+```
+
+*Log likelihood ratio test:*
+```{r}
+#Log likelihood ratio test:
+-2*(-337.913-(-324.673)) # Zuur et al. (2009)
+
+# Correction:
+0.5*(1-pchisq(26.48,1)) # Verbeke and Molenberghs (2000)
+```
+
+In fact, adding a random intercept for reefs significantly improves the model quality (Model M1a).
+
+**STEP 3: Finding the optimal fixed structure**
+
+Now, let's test whether the interactions associated with the fixed effect are influential in the model. This involves creating a nested structure, starting with the model containing full interactions and comparing it to a model without interactions. To do this, we will refit Model M1a using a likelihood ratio test based on maximum likelihood (ML) estimation.
+
+```{r}
+# Full
+M1a.1 <- lme(
+  Chitons ~  Flu.cover * Asc.cover * Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+#Adding three-way interactions
+M1a.2 <- lme(
+  Chitons ~  Flu.cover * Bryo.cover +
+   Flu.cover * Spong.cover +
+   Flu.cover * Asc.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+# Add two-way interactions
+M1a.3 <- lme(
+  Chitons ~
+    Flu.cover * Asc.cover +
+    Flu.cover * Bryo.cover +
+    Flu.cover * Spong.cover +
+    Asc.cover * Bryo.cover +
+    Asc.cover * Spong.cover +
+    Bryo.cover * Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+# without interactions
+M1a.4 <- lme(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+```
+
+*Model selection:*
+```{r}
+model.sel(M1a.1,M1a.2,M1a.3,M1a.4)
+```
+
+Model M1a.4 has the lowest AICc value and the highest weight.
+
+*Anova test:*
+```{r}
+anova(M1a.1,M1a.4)
+```
+
+*Log likelihood ratio test:*
+```{r}
+#Log likelihood ratio test:
+-2*(-254.5977-(-255.8333)) # Zuur et al. (2009)
+
+# Correction:
+0.5*(1-pchisq(-2.4712,1)) # Verbeke and Molenberghs (2000)
+```
+
+Removing the interaction was not significant, keeping it in the fixed component of the model offers no benefit. We will proceed with the fixed structure of Model 1a.4, which has the lowest AIC and BIC.
+
+**Model 1a.4**
+```{r echo=FALSE}
+summary(M1a.4)
+```
+
+**STEP 4: Reduce the model by removing nonsignificant fixed effects.**
+
+Now, let's refine our Model 1a.4 by using the *drop1*() function to remove non-significant fixed effects base on the highest p-values.
+
+```{r}
+# Original model:
+M1a.4 <- lme(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+drop1(M1a.4, test="Chi")
+
+# Removing 'Asc.cover':
+M1a.4a <- lme(
+  Chitons ~  Flu.cover + Bryo.cover + Spong.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+drop1(M1a.4a, test="Chi")
+
+# Removing 'Spong.cover':
+M1a.4b <- lme(
+  Chitons ~ Flu.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+drop1(M1a.4b, test="Chi") 
+
+# Removing 'Bryo.cover':
+M1a.4c <- lme(
+  Chitons ~  Flu.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+```
+
+*Model selection:*
+```{r}
+model.sel(M1a.4,M1a.4a,M1a.4b,M1a.4c)
+```
+
+The Model M1a.4b and Model M1a.4c models are very similar. We will choose M1a.4c because it has a slightly lower AIC value and fewer predictors.
+
+*Anova test:*
+```{r}
+anova(M1a.4,M1a.4c)
+```
+
+*Log likelihood ratio test:*
+```{r}
+#Log likelihood ratio test
+-2*(-255.8333-(-256.6482)) # Zuur et al. (2009)
+
+# Correction:
+0.5*(1-pchisq(-1.6298,1)) # Verbeke and Molenberghs (2000)
+```
+
+Removing non-significant fixed-effects predictors made no significant difference. Therefore, we will proceed with Model M1a.4c, which has the lowest AIC and BIC.
+
+**Model 1a.4c**
+```{r echo=FALSE}
+summary(M1a.4c)
+```
+
+**STEP 5: Adjusting to REML and model validation.**
+
+We will refit the Model M1a.4c for Restricted maximum likelihood (REML) estimation using *lmer*() function for validation by *DHARMa* package.
+
+```{r}
+M1a.4c_reml <- lmer(
+  Chitons ~ Flu.cover + (1|fSite),
+  data=side
+)
+
+summary(M1a.4c_reml)
+```
+
+*Calculating randomized quantile residuals:*
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = M1a.4c_reml,
+                            n = 1000)
+plot(simRes) 
+
+```
+
+These diagnostics indicate that the model may not be adequately capturing the underlying data structure, which aligns with our expectation that a Gaussian distribution is unsuitable for count data. Therefore, let's generalize our Model M1a.4 to use a Poisson distribution and simplify it accordingly.
+
+**STEP 6: Generalizing to Poisson and reducing the model**
+
+We use the *drop1*() function to remove non-significant fixed effects base on the highest p-values.
+
+```{r results='hide'}
+P_M1a.4 <- glmmTMB(
+  Chitons ~  Flu.cover + Asc.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family = poisson,
+  data = side
+)
+
+summary(P_M1a.4)
+drop1(P_M1a.4, test="Chi") # Asc.cover
+
+P_M1a.4a <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family = poisson,
+  data = side
+)
+
+summary(P_M1a.4a)
+drop1(P_M1a.4a, test="Chi") # Spong.cover
+
+P_M1a.4b <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover + (1|fSite),
+  family = poisson,
+  data = side
+)
+
+summary(P_M1a.4b) 
+```
+
+*Model selection:*
+```{r}
+model.sel(P_M1a.4,P_M1a.4a,P_M1a.4b)
+```
+
+*Anova test:*
+```{r}
+anova(P_M1a.4,P_M1a.4b)
+```
+
+*Log likelihood ratio test:*
+```{r}
+#Log likelihood ratio test
+-2*(-161.37-(-162.97)) # Zuur et al. (2009)
+
+# Correction:
+0.5*(1-pchisq(-3.2,1)) # Verbeke and Molenberghs (2000)
+
+```
+
+*Calculating randomized quantile residuals:*
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M1a.4b,
+                            n = 1000)
+plot(simRes) 
+```
+
+*Detecting missing predictors or wrong functional assumptions:*
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+```
+
+The residual vs. '*Flu.cover*' plot appear to be randomly scattered around the fitted line, indicating no significant patterns or trends. This confirms that the residuals do not present significant deviations from the expected distribution, suggesting that '*Flu.cover*' is modeled appropriately. However, to '*Bryo.cover*' a significant issues with residual distribution, indicating potential model mis-specification. The presence of vertical lines suggests that '*Bryo.cover*' has a lot of zeros and a few other distinct values, leading to clustering of residuals at these points. This is typical for percentage data or count data with many zeroes. A suitable approach to address this issue could be to use '*Bryo.cover*' as a zero-inflated predictor. Let's see.
+
+**STEP 7: Incorporing zero inflation**
+
+```{r}
+P_M1a.4b.1<- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover  + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+```
+
+*Calculating randomized quantile residuals:*
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M1a.4b.1,
+                            n = 1000)
+plot(simRes) 
+```
+
+It is good!
+
+*Detecting missing predictors or wrong functional assumptions:*
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+```
+
+The red curves and the significant result from the quantile test indicate that the model may not be capturing the true underlying relationship adequately.
+
+We have two options here: applying a transformation to the predictor, such as a log or square root transformation, or adding additional predictors or interaction terms. Let's explore both approaches and compare them.
+
+**STEP 7: Final adjustments**
+
+Following Model P_M1a.4b we'll adjust the predictor '*Bryo.cover*' by taking the square root to stabilize its variance. This transformation is particularly effective for count-like data or when working with proportions. Unlike the logarithmic transformation, it's less aggressive and adept at handling zero values.
+
+```{r}
+P_M1a.4b.2 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover) + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+```
+
+```{r}
+summary(P_M1a.4b.2)
+```
+
+Previously, we noted that the model incorporating the '*Spong.cover*' predictor (model P_M1a.4a) closely resembles the current model we're analyzing (model P_M1a.4b). Hence, it's worth considering incorporating this predictor as an additional approach.
+
+```{r}
+P_M1a.4a.1 <- glmmTMB(
+  Chitons ~  Flu.cover + Bryo.cover + Spong.cover + (1|fSite),
+  family = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+```
+
+```{r}
+summary(P_M1a.4b.2)
+```
+
+```{r}
+model.sel(P_M1a.4a.1,P_M1a.4b.2)
+```
+
+```{r}
+AIC(P_M1a.4a.1,P_M1a.4b.2)
+AICc(P_M1a.4a.1,P_M1a.4b.2)
+BIC(P_M1a.4a.1,P_M1a.4b.2)
+```
+
+```{r}
+anova(P_M1a.4a.1,P_M1a.4b.2)
+```
+
+The models exhibit very similar AIC and AICc values, with Model P_M1a.4b.2 showing a slightly lower BIC value. Next, we will proceed to validate and visually inspect the residuals to determine the best model.
+
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M1a.4b.2,
+                            n = 1000)
+plot(simRes) 
+```
+
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+
+```
+
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M1a.4a.1,
+                            n = 1000)
+plot(simRes) 
+```
+
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,3))
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Spong.cover)
+```
+
+Both models are well-fitted, but visually, the residuals of the P_M1a.4b.2 model show no systematic pattern. Therefore, we will select it to proceed with formal tests.
+
+**MODEL VALIDATION**
+
+**Final model:** P_M1a.4b.2
+
+```{r eval=FALSE}
+P_M1a.4b.2 <- glmmTMB(
+  Chitons ~  Flu.cover + sqrt(Bryo.cover) + (1|fSite),
+  family  = poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+summary(P_M1a.4b.2)
+```
+
+**Calculating randomized quantile residuals.**
+```{r}
+simRes <- simulateResiduals(fittedModel = P_M1a.4b.2, n=1000, 
+                            plot=T) 
+```
+
+**Formal tests for over/underdispersion.**
+```{r}
+testDispersion(simRes)
+```
+
+No significant overdispersion/underdispersion. A p-value greater than 0.05 typically indicates no significant deviation from the expected dispersion, suggesting that the residuals are appropriately dispersed.
+
+**Formal tests for zero-inflation.**
+```{r}
+testZeroInflation(simRes, plot=T)
+```
+
+No significant zero-inflationwas detected. A p-value greater than 0.05 typically indicates no significant deviation between the observed number of zeros and the zeros expected from simulations, suggesting a good-fitting model.
+
+**Outlier test.**
+```{r}
+testOutliers(simulationOutput = simRes)
+```
+
+**Detecting missing predictors or wrong functional assumptions.**
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,2)) 
+plotResiduals(simRes, side$Flu.cover)
+plotResiduals(simRes, side$Bryo.cover)
+```
+
+# II. Question 2
+
+**Objective**: Investigate whether the effect of the fluorescent substrate cover on the abundance of fluorescent chiton species can be translated into a specie-specific association to the type of red crust algae on the sides of boulders.
+
+**Hypothesis**: The fluorescent chiton-substrate association is independent of species-specific relationships.
+
+To address this issue, we will split the variable '*Flu.cover*' into '*Live.cca*' and '*Live.pey*' and build a new model using the same procedures described in Question 1.
+
+Summarizing, we have:
+
+**Response**: '*Chitons*'.
+
+**Predictors**: '*Live.cca*', '*Live.pey*','*Asc.cover*', '*Bryo.cover*' and '*Spong.cover*'.
+
+*Variance Inflation Factor:*
+
+```{r echo=FALSE}
+# Variance Inflation Factor
+Z <- side[,c("Live.cca","Live.pey","Asc.cover","Bryo.cover","Spong.cover")]
+vifcor(Z)
+```
+
+**MODEL BUILDING**
+
+**STEP 1: Fitting a 'loaded' mean structure model.**
+```{r}
+M2 <- gls(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  method = "REML",
+  data = side
+)
+```
+
+**STEP 2: Selecting a structure for the random effects.**
+```{r}
+M2a <- lme(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "REML",
+  data = side
+)
+```
+
+*Akaike information criterion (AIC):*
+```{r echo=FALSE}
+# Akaike information criterion:
+AIC(M2,M2a)
+```
+
+*Bayesian Information Criteria (BIC):*
+```{r echo=FALSE, warning=FALSE}
+# Bayesian Information Criteria:
+BIC(M2,M2a)
+```
+
+*Anova test:*
+```{r echo=FALSE}
+anova(M2,M2a) # M2a
+```
+
+*Log likelihood ratio test*:
+```{r}
+# Log likelihood ratio test:
+-2*(-284.6273-(-269.0895)) # Zuur et al. (2009)
+```
+
+```{r}
+# Correction:
+0.5*(1-pchisq(31.0756,1)) # Verbeke and Molenberghs (2000)
+```
+
+In fact, adding a random intercept for reefs significantly improves the model quality (Model M2a).
+
+**STEP 3: Finding the optimal fixed structure.**
+
+Let's test whether introducing an interaction structure between "*Live.cca*" and "*Live.pey*" significantly improves the the model.
+
+```{r}
+# Original model:
+M2a <- lme(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+
+# Interaction structure:
+M2b <- lme(
+  Chitons ~ Live.cca*Live.pey + Asc.cover + Spong.cover + Bryo.cover,
+  random = ~ 1 | fSite,
+  method = "ML",
+  data = side
+)
+```
+
+*Akaike information criterion (AIC):*
+```{r echo=FALSE}
+# Akaike information criterion:
+AIC(M2a,M2b)
+```
+
+*Bayesian Information Criteria (BIC):*
+```{r echo=FALSE, warning=FALSE}
+# Bayesian Information Criteria:
+BIC(M2a,M2b)
+```
+
+*Second-order Akaike Information Criterion*
+```{r}
+AICc(M2a,M2b)
+```
+
+*Anova test:*
+```{r echo=FALSE}
+anova(M2a,M2b)
+```
+
+*Log likelihood ratio test:*
+```{r}
+# Log likelihood ratio test:
+-2*(-255.6756-(-255.6334)) # Zuur et al. (2009)
+```
+
+```{r}
+# Correction:
+0.5*(1-pchisq(0.0844,1)) # Verbeke and Molenberghs (2000)
+```
+
+The interaction term do not significantly improve our model. Therefore, we will retain the model without interaction (Model M2a), as it has the lowest AIC and BIC values.
+
+**STEP 4: Generalizing to Poisson and Reducing the Model**
+
+Let's proceed a few steps forward here. We'll start generalizing Model M2a to fit the Poisson distribution, as counting data (discrete quantitative) typically exhibit errors that follow a Poisson distribution. Next, we'll reduce the model by removing nonsignificant fixed effects based on the highest p-values.
+
+```{r}
+P_M2a <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+summary(P_M2a)
+drop1(P_M2a, test = "Chi")
+
+# Removing Asc.cover:
+P_M2b <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Spong.cover + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+summary(P_M2b)
+drop1(P_M2b, test = "Chi")
+
+# Removing Spong.cover:
+P_M2c <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+summary(P_M2c)
+drop1(P_M2c, test = "Chi")
+```
+
+Removing any additional terms could significantly impact the model's fit. Therefore, we will stop here.
+
+*Model selection:*
+```{r}
+model.sel(P_M2a,P_M2b,P_M2c)
+```
+
+All models are very similar.
+
+```{r}
+anova(P_M2a,P_M2b)
+anova(P_M2a,P_M2c)
+```
+
+There are no significant improvements. Given the similarity of the models, let's compute random quantile residuals and conduct an initial visual inspection for each one.
+
+**STEP 5: Calculating randomized quantile residuals**
+
+A) Model P_M2a:
+
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M2a,
+                            n = 1000, plot = TRUE)
+```
+Falls short.
+
+B) Model P_M2b:
+
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M2b,
+                            n = 1000, plot = TRUE)
+```
+Too.
+
+C)  Model P_M2c:
+
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M2c,
+                            n = 1000, plot = TRUE)
+```
+
+Good.
+
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(2,2))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+```
+
+Is it possible to correct with zero inflation?
+
+**STEP 6: Zero inflation correction in Model P_M2c**
+
+```{r}
+# Original model:
+P_M2c <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=poisson,
+  data = side
+)
+
+# Zi structure 1:
+P_M2c.1 <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=poisson,
+  ziformula = ~ Live.pey + Bryo.cover,
+  data = side
+)
+
+# Zi structure 2:
+P_M2c.2 <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=poisson,
+  ziformula = ~ Live.pey,
+  data = side
+)
+
+# Zi structure 3:
+P_M2c.3 <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+```
+
+*Model selection:*
+```{r}
+model.sel(P_M2c,P_M2c.1,P_M2c.2,P_M2c.3)
+```
+
+The models P_M2c.3 and P_M2c.2 are nearly indistinguishable. However, the inclusion of the zero inflation structure lowers the AICc of the model.
+
+*Formal test*
+```{r}
+anova(P_M2c,P_M2c.3)
+```
+
+We selected the model with the lowest AIC and tested the introduction of zero inflation. It proved to be highly significant and reduced both AIC and BIC. Let's check again
+
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M2c.3,
+                            n = 1000, plot = TRUE)
+```
+
+Good.
+
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,3))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+```
+
+Taking the square root may stabilize this smoothed pattern in the residual vs. live.prey relationship.
+
+**STEP 7: Transforming predictors**
+
+```{r}
+P_M2c.3a <- glmmTMB(
+  Chitons ~ Live.cca + sqrt(Live.pey) + sqrt(Bryo.cover) + (1|fSite),
+  family=poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+P_M2c.3b <- glmmTMB(
+  Chitons ~ Live.cca + sqrt(Live.pey) + Bryo.cover + (1|fSite),
+  family=poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+P_M2c.3c <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + sqrt(Bryo.cover) + (1|fSite),
+  family=poisson,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+```
+
+*Model selection:*
+```{r}
+model.sel(P_M2c.3, P_M2c.3a,P_M2c.3b,P_M2c.3c)
+anova(P_M2c.3,P_M2c.3c)
+```
+
+*Model validation:*
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = P_M2c.3c,
+                            n = 1000, plot = TRUE)
+```
+
+*Detecting missing predictors or wrong functional assumptions.*
+```{r}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,3))
+plotResiduals(simRes, side$Live.cca)
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+```
+
+It doesn't solve the problem. Switch to Negative Binomial.
+
+**STEP 8: Switching to Negative Binomial**
+
+Let's do it all again, but this time for Negative Binomial. Remembering, we will have to go back to Model M2.
+
+```{r}
+# Original fixed structure:
+NB_M2 <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Asc.cover + Spong.cover + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_M2) 
+drop1(NB_M2, test = "Chi") 
+
+# Removing Asc.cover:
+NB_M2a <- glmmTMB( 
+  Chitons ~ Live.cca + Live.pey + Spong.cover + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_M2a)
+drop1(NB_M2a, test = "Chi")
+
+# Removing Spong.cover:
+NB_M2b <- glmmTMB(
+  Chitons ~ Live.cca + Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_M2b)
+drop1(NB_M2b, test = "Chi")
+
+# Removing Live.cca:
+NB_M2c <- glmmTMB( 
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_M2c)
+drop1(NB_M2c, test = "Chi")
+
+# Removing Live.pey:
+NB_M2d <- glmmTMB(
+  Chitons ~ Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+summary(NB_M2d)
+```
+
+*Model Selection:*
+```{r}
+model.sel(NB_M2,NB_M2a,NB_M2b, NB_M2c, NB_M2d)
+anova(NB_M2, NB_M2c)
+anova(NB_M2, NB_M2d)
+```
+
+*Model Validation:*
+
+A) Model NB_M2c:
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = NB_M2c,n = 1000, plot=T)
+
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,2)) 
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+
+```
+
+B) Model NB_M2d:
+```{r}
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = NB_M2d,n = 1000, plot=T)
+
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,1)) 
+plotResiduals(simRes, side$Bryo.cover)
+
+```
+
+Both models can be used ($\Delta < 1$), but the first (NB_M2c) will need additional structures for a better fit, making it more complex. Model NB_M2d is already well-adjusted. Ideally, residuals should be uniformly distributed around this line, indicating no systematic deviation between observed and predicted values. Although the plot shows slight deviations, they are within the confidence intervals, suggesting the model fits the data reasonably well. While introducing a polynomial structure could linearize the smoothed line, it is not necessary. Applying the principle of parsimony [^1], we should consider NB_M2d as the best model. Nevertheless, let's explore further by testing the polynomial structure in "*Bryo.cover*".
+
+[^1]: "*All things being equal, the simplest solution tends to be the best one.*" William of Ockham.
+
+**Step 9: Introducing polynomial structure in NB_M2d**
+
+```{r warning=FALSE}
+# Original model:
+NB_M2d <- glmmTMB(
+  Chitons ~ Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+# Modified model:
+NB_M2d.1 <- glmmTMB(
+  Chitons ~ I(Bryo.cover^2) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = NB_M2d.1,n = 1000, plot=T)
+
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,1)) 
+plotResiduals(simRes, side$Bryo.cover)
+
+# Model selection
+model.sel(NB_M2d, NB_M2d.1)
+anova(NB_M2d, NB_M2d.1)
+
+```
+
+The polynomial structure indeed linearized the relationship, but it increased the AIC and BIC values. Since both models are similar, we can parsimoniously maintain the simpler structure of NB_M2d.
+
+Now, let's see what happens if we delve further into Model NB_M2c.
+
+**Step 10: Proceeding with Model NB_M2c**
+
+**Introducing zero inflation:**
+
+```{r}
+# Original model
+NB_M2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+# ZI structure 1:
+NB_M2c.1 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Live.pey + Bryo.cover,
+  data = side
+)
+
+# ZI structure 2:
+NB_M2c.2 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Live.pey,
+  data = side
+)
+
+# ZI structure 3:
+NB_M2c.3 <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  ziformula = ~ Bryo.cover,
+  data = side
+)
+
+model.sel(NB_M2c,NB_M2c.1,NB_M2c.2,NB_M2c.3)
+anova(NB_M2c, NB_M2c.2)
+
+# Calculating randomized quantile residuals:
+simRes <- simulateResiduals(fittedModel = NB_M2c.2,
+                            n = 1000, plot = TRUE)
+
+```
+
+The NB_M2c model continues to have the lowest AIC.
+
+**Square root transformation:**
+
+```{r}
+# Original model:
+NB_M2c <- glmmTMB(
+  Chitons ~ Live.pey + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+# sqrt structure 1:
+NB_M2c.1 <- glmmTMB(
+  Chitons ~ sqrt(Live.pey) + sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+# sqrt structure 2:
+NB_M2c.2 <- glmmTMB(
+  Chitons ~ sqrt(Live.pey) + Bryo.cover + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+# sqrt structure 3:
+NB_M2c.3 <- glmmTMB(
+  Chitons ~ Live.pey +sqrt(Bryo.cover) + (1|fSite),
+  family=nbinom1,
+  data = side
+)
+
+model.sel(NB_M2c,NB_M2c.1,NB_M2c.2,NB_M2c.3)
+```
+
+The models are very close.
+
+```{r}
+anova(NB_M2c, NB_M2c.3)
+```
+
+```{r}
+anova(NB_M2c, NB_M2c.1)
+```
+
+Transforming the predictors made the model slightly better, let's continue with the validation of NB_M2c.3 and NB2c.1.
+
+*Model Validation*
+
+A. Model NB_M2c.3
+```{r}
+# Calculating randomized quantile residuals
+simRes <- simulateResiduals(fittedModel = NB_M2c.3,
+                            n = 1000, plot = TRUE)
+```
+
+Quantile deviations detected.
+
+B. Model NB_M2c.1
+```{r}
+# Calculating randomized quantile residuals
+simRes <- simulateResiduals(fittedModel = NB_M2c.1,
+                            n = 1000, plot = TRUE)
+```
+
+Nice.
+
+```{r warning=FALSE}
+# Detecting missing predictors or wrong functional assumptions:
+par(mfrow = c(1,2))
+plotResiduals(simRes, side$Bryo.cover)
+plotResiduals(simRes, side$Live.pey)
+```
+
+Very good. Let's compare it to the Model NB_M2d to determine if the additional effort was justified or if a more parsimonious approach would have been adequate.
+
+*Anova test:*
+```{r echo=FALSE}
+# Anova test
+anova(NB_M2c.1, NB_M2d)  # NB_M2d
+```
+
+There is no significant difference between the models, so we can choose the simplest one with the lowest AIC (Model NB_M2d).
+
+**Our final best model**
+```{r}
+# Our final model
+summary(NB_M2d)
+```
+
+# III. Conclusion
+
+When we considered algal cover separately ('*Live.cca*' and '*Leve.pey*'), our best model highlighted only the role of bryozoan cover in determining chiton abundance. However, when we examined fluorescent substrates ('*Flu.cover*'), our best model incorporated not only bryozoan coverage but also the effect of the fluorescent substrate on the relationship.
+
+# References
+
+**Verbeke, G. and Molenberghs, G. 2009. Linear Mixed Models for Longitudinal Data. - Springer.**
+
+**West, B. T., Welch, K. B. and Galecki, A. T. 2022. Linear Mixed Models: A Practical Guide Using Statistical Software. - Chapman and Hall/CRC.**
+
+**Zuur, A. F., Ieno, E. N., Walker, N., Saveliev, A. A. and Smith, G. M. 2009. Mixed effects models and extensions in ecology with R. - Springer.**
