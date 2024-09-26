@@ -3,13 +3,13 @@ title: "2.4_Main document"
 author: "G.Grimaldi"
 date: "`r Sys.Date()`"
 output:
-  html_document:
-    toc: yes
   pdf_document:
     toc: yes
   word_document:
     toc: yes
     reference: estilo.docx
+  html_document:
+    toc: yes
 bibliography: references.bib
 csl: csl_ecology.csl
 ---
@@ -58,7 +58,7 @@ included live crustose coralline algae (*Lithothamnium* sp.), which averaged 47.
 
 ## *Chitons abundance increases with fluorescent and bryozoans covers*
 
-Our analysis shows that the abundance of fluorescent chitons significantly increases with higher percentages of fluorescent substrates and bryozoan coverage on the sides of the boulders, regardless of the reef scale (FIGURE OU TABLE?). Specifically, chiton abundance increases at a rate of 0.02 chitons per percentage of fluorescent substrates (ziGLMM Poisson, z=3.11, SE=0.01, p<0.01) and approximately 0.20 chitons per square root of bryozoan coverage (ziGLMM Poisson, z=1.96, SE=0.11, p<0.05)[^3]. When examined through a species-specific relationship between chitons and red crusts, chiton abundance becomes proportionally linear to the increase of bryozoans, at a rate of 0.05 chitons/bryozoan cover (GLMM Negative Binomial, z=2.28, SE=0.02, p=0.02). In this context, the live cover of neither CCA nor soft red crusts significantly predicted an increased likelihood of the data's occurrence in our model (tabela modelos).
+Our analysis shows that the abundance of fluorescent chitons significantly increases with higher percentages of fluorescent substrates and bryozoan coverage on the sides of the boulders, regardless of the reef scale (FIGURE 2 ??). Specifically, chiton abundance increases at a rate of 0.02 chitons per percentage of fluorescent substrates (ziGLMM Poisson, z=3.11, SE=0.01, p<0.01) and approximately 0.20 chitons per square root of bryozoan coverage (ziGLMM Poisson, z=1.96, SE=0.11, p<0.05)[^3]. When examined through a species-specific relationship between chitons and red crusts, chiton abundance becomes proportionally linear to the increase of bryozoans, at a rate of 0.05 chitons/bryozoan cover (GLMM Negative Binomial, z=2.28, SE=0.02, p=0.02). In this context, the live cover of neither CCA nor soft red crusts significantly predicted an increased likelihood of the data's occurrence in our model (Table 2).
 
 # **4. Discussion**
 

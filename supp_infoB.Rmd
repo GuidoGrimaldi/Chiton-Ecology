@@ -3,9 +3,9 @@ title: "Supp_B_Ecological_Models"
 author: "G.Grimaldi"
 date: "`r Sys.Date()`"
 output: 
-  html_document:
-    toc: yes
   pdf_document:
+    toc: yes
+  html_document:
     toc: yes
 ---
 
