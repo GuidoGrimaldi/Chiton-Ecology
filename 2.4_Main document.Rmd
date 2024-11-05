@@ -14,15 +14,72 @@ bibliography: references.bib
 csl: csl_ecology.csl
 ---
 
-# **Lighting up Boulder Reefs: Influence of fluorescent substrates on biofluorescent chiton distribution**
+# **Lighting up Boulder Reefs: Influence of fluorescent substrates on chiton distribution**
 
-# **Abstract**
+# **Abstract (250 words)**
+
+# **Keywords**
 
 # **1. Introduction**
 
-An organism is intrinsically integrated with its environment [@maturana1987]. It is continuously immersed in physical and chemical properties, which we can observe as *cues*[^1], *signals*, and *information* used to establish ecological relationships and adapt to a changing world [@ dusenbery1992; @stevens2013; @delhey2017]. These processes are primarily mediated by the sensory system, which defines the boundaries of the organism's *sensory environments* [@krapp2008] and, ultimately, the boundaries of their *ecological niche* [@jaeger1978]. The sensory environment influences individual fitness in various ways, affecting the search for feeding, shelter, mates, and migrations [@kingsford2002; @yamamoto2023; @escalona2023; @cooper2023]. *Boulder dwellers* are notably influenced by their capacity to utilize sensory cues in assessing *habitat quality* during larval settlement and spatial distribution [@silen1972; @svane1995; @sumner-rooney2020]. A boulder is a rounded rock fragment, regularly or irregularly shaped, greater than 256 mm [@wentworth1922], and notably prone to rolling when subjected to physical disturbance [@sousa1979]. These disturbances can include wave action [@sousa1979a], currents and storms [@li2023], or human activities like seafood harvesting [@stagnol2013]. The rate at which boulder overturns depends on factors such size, mass, shape, burial, orientation, and location [@mcguinness1987a; @lorang2000; @goto2010; @gomez-pazo2021]. Additionally, boulders frequently experience microscale disturbance from wave-borne projectiles (e.g. logs, driftwood, pebbles, cobbles and even other boulders) and sand abrasion [@daly1977; @shanks1986]. As a result, boulder reefs are highly dynamic, patchy, and unstable marine systems, forming a mosaic of patches at various stages of community development [@osman1977; @sousa1984; @mcguinness1986]. At a finer-scale, factors like resource availability, reproductive needs, competition,predation risk, and disturbance regime may act as filters, favoring behaviors that allow individuals to select high-quality habitats for survival and reproduction [@kimirei2013; @majoris2018 @hyman2024]. In patchy landscapes, habitat specialists species can potentially choose to occupy habitats that maximize their fitness [@price2010; @rimmer2021]. At broader scales, these patterns of *habitat use* defines crucial areas for the population's long-term survival and reproduction, leading to spatial-temporal heterogeneity observed at the community level [@rosenzweig1987; @deangelis2014; @leibold2018]. 
+Coastal reefs are facing unprecedented Anthropogenic driven threats to their continued existence as biodiverse and functional ecosystems upon which hundreds of millions of people rely [REF]. These include well-known systems like coral reefs, rocky shores, and seagrasses, along with lesser-known habitats such as rhodolith beds, sandstone reef, boulder fields, and others [REF]. Boulder reefs, also known as 'boulder fields', are a little-know marine systems that support biodiverse communities, including ecologically rare and habitat-specialist species [@liversage2018]. They are found in the nearshore and littoral zone all over the world [REF]. Geologically, a boulder is defined as a detached rock fragment (i.e. piece of stone) larger than 256 mm, regardless of shape [@wentworth1922]. However, when these loose rocks are submerged in natural aquatic environments, they can be colonized by various sessile benthic organisms [@wilson1987]. This is particularly interesting for ecology studies for two main reason: first, in aquatic environments hard substrate is limiting resource to encrusting and boring organisms, leading to space competition [REF]; second, individual boulders are discrete rocks and thus easily measurable [REF]. Additionally, they mobility allows them to be overturned by weather, creating disturbance within their communities [REF]. Evidence of this disturbance process is detectable even in the fossil record [REF]. In intertidal zones, these disturbances can include wave action [@sousa1979a], currents and storms [@li2023], and human activities [@stagnol2013], as well as microscale disturbance from wave-borne projectiles (e.g. logs, driftwood, pebbles, cobbles and even other boulders) and sand abrasion [@daly1977; @shanks1986]. The rate of boulder overturning depends on factors such as size, mass, shape, burial, orientation, and location [@mcguinness1987a; @lorang2000; @goto2010; @gomez-pazo2021]. Thus, the frequency of disturbance to which boulders are subjected, along with their intrinsic characteristics, causes boulder reefs to be spatially arranged as a mosaic of patches at various stages of community development over time [@osman1977; @sousa1984; @mcguinness1986]. This results in a highly dynamic, patchy, and unstable marine system.
 
-Many shallow-water marine organisms are sensitive to light in at least one phase of their life cycle [@cronin2017; @marshall2017c]. Light plays a central role in numerous biological processes, including biological rhythms, photosynthesis, photoperiodism, phototaxis, and vision [@bjorn2015; @bhadra2017; @brelsford2019]. Ecologically, light influences energy flow within ecosystems, affecting productivity, species distribution, and ecological interactions [@floder2002; @cohen2002; @thrane2014]. It also acts as a selective pressure, driving evolutionary changes in behaviors, physiology, and morphology, such as pigmentation [@lahti2016], photoreception and the development of optical structures [@nilsson2013; @randel2016]. In this way, light has profoundly shaped the evolutionary history of life on Earth [@rapf2016; @beckstead2016]. The interaction of light and matter determines its availability and how effectively it can be utilized by living organisms. For instance, the amount of sunlight that reaches the forest floor is influenced by factors like sun position, leaf area per unit ground area and optical properties of both the leaves and the soil [@bolibok2013]. Similarly, the quality of light reaching visual pigments depends on the *optical properties* of  pre-retinal media (i.e. the cornea, lens, and aqueous and vitreous humors), as  well as specialized structures such as oil droplets and *tapeta* [@cronin2014]. The diversity of color patterns in nature arises from contrasting optical properties of pigments, structural mechanisms, or *bioluminescence* [@cuthill2017; @schramm2024], often serving as visual signals for mate selection [@kato2024], camouflage [@cuthill2019a], aposematism [@caro2019a], or as visual cues for sheltering [@costa2023], foraging [@spaethe2001], and conspecifics recognition [@silva2024]. Fluorescent pigments, i.e. fluorophores, have gained particular attention due to the incresing number of documented biofluorescent animals, including sponges [@read1968; @mazel2003b], corals [@eyal2015], hydrozoans [@maggioni2020], siphonophores [@haddock2015], planarians [@stubenhaus2016], worms [@mazel2003b], seasnails [@williams2016], nudibranchs [@betti2021a], barnacles [@matsumura2014], crabs [@juhasz-dora2024], stomatopds [@mazel2004], tardigrades [@suma2020], spiders[@lim2007; @brandt2017], fish [@anthes2016; @sparks2014a], frogs [@@taboada2017a], salamanders [@lamb2020a], turtles [@gruber2015a], geckos [@protzel2021], birds [@arnold2002; @wilkinson2019], and mammals [@olson2021a; @anich2021]. Fluorescence is a physical phenomenon in which emitted light typically has lower energy (i.e., longer wavelength) than absorbed light due to to energy conversion into other forms [@johnsen2011]. Although fluorophores cannot add more energy to the system, they can add more photons, potentially enhancing the *brightness* of an organism's surface [@mazel2004; @montgomerie2006]. The visual role of biofluorescence in eco-evolutionary processes remains a topic of debate [@iriel2010; @marshall2017; @mazel2017]. Some studies suggesting that it may enhance the intensity of visual signals, potentially influencing mate choice [@arnold2002; @mazel2004; @lim2007] and the settlement of planktonic larvae in marine benthic organisms [@matsumura2014]. 
+*Boulder dwellers* species are notably influenced by their ability to use sensory cues to assess *habitat quality*, for example, during larval settlement and spatial distribution [@silen1972; @svane1995; @sumner-rooney2020]. These organisms are intrinsically integrated with their environment [@maturana1987]. They are continuously immersed in physical and chemical properties, which we can observe as cues and signals that they used as source of information to establish ecological relationships and adapt to a changing world [@stevens2013; @delhey2017]. These processes are primarily mediated by the sensory system, which defines the boundaries of the organism's *sensory environments* [@krapp2008] and, ultimately, the boundaries of their *ecological niche* [@jaeger1978]. At a finer scale, factors like resource availability, reproductive needs, competition, predation risk, and disturbance regime may act as filters, favoring behaviors that allow individuals to select high-quality habitats for survival and reproduction [@kimirei2013; @majoris2018 @hyman2024]. These patterns of *habitat use* defines, at broader scales, the crucial areas for the population's long-term survival and reproduction, leading to spatial-temporal heterogeneity observed at the community level [@rosenzweig1987; @deangelis2014; @leibold2018]. In patchy landscapes such as boulder reefs, habitat specialists species may choose habitats that maximize their fitness [@price2010; @rimmer2021]. Studies on larval settlement have shown that the spectral characteristics and brightness of substrates positively influence habitat selection in photosensitive planktonic larvae of various benthic invertebrates species [@satheesh2010; @mason2011; @ells2016]. As many shallow-water marine organisms are sensitive to light in at least one phase of their life cycle [@cronin2017; @marshall2017c], light has a central role in the bio-ecology of these species.
+
+Life as we know it today could not exist without light [REF]. Its energy is the driving force for most ecosystems. Its plays a fundamental role in numerous biological processes, including photosynthesis, photoperiodism, biological rhythms, phototaxis, and vision [@bjorn2015; @bhadra2017; @brelsford2019]. It also influences specie distribution, productivity, and ecological interactions [@floder2002; @cohen2002; @thrane2014] and acts as a selective pressure, driving evolutionary changes in behaviors, physiology, and morphology [@lahti2016; @rapf2016; @beckstead2016]. Its the interaction of light with matter that determines its availability and how effectively it can be utilized by living organisms [@brandbury2011]. For instance, the amount (photons number) and quality (wavelength or frequency) of sunlight that reaches the sea floor is influenced by factors like depth, sun position, phytoplankton concentration, suspended sediment, and dissolved organic matter [REF]. Similarly, the quality of light reaching visual pigments depends on the *optical properties* of  pre-retinal media (i.e. the cornea, lens, and aqueous and vitreous humors), as  well as specialized structures such as oil droplets and *tapeta* [@cronin2014]. The astonishing diversity of color patterns in nature arise from contrasts between color patches generated primarily by three processes: 1) selective absorption of pigments, 2) reflected light in structural mechanisms presented in the integument (i.e., structural colors), and 3) self-generated light via biochemical processes, known as *bioluminescence* [@cuthill2017; @schramm2024]. Many of these color patterns often serving as visual signals for socio-sexual signalling [@kato2024], camouflage [@cuthill2019a], aposematism [@caro2019a], or as visual cues for sheltering [@costa2023], foraging [@spaethe2001], and conspecific recognition [@silva2024]. Among pigments, fluorescent ones (i.e., fluorophores) have gained particular attention due to the increasing number of documented biofluorescent animals, including sponges [@read1968; @mazel2003b], corals [@eyal2015], hydrozoans [@maggioni2020], siphonophores [@haddock2015], planarians [@stubenhaus2016], worms [@mazel2003b], chitons [], bivalves [], seasnails [@williams2016], nudibranchs [@betti2021a], barnacles [@matsumura2014], crabs [@juhasz-dora2024], stomatopds [@mazel2004], tardigrades [@suma2020], insects [REF], spiders[@lim2007; @brandt2017], fish [@anthes2016; @sparks2014a], frogs [@taboada2017a], salamanders [@lamb2020a], turtles [@gruber2015a], geckos [@protzel2021], birds [@arnold2002; @wilkinson2019], and mammals [@olson2021a; @anich2021]. Fluorescent pigments can transfer energy across the optical spectrum, with emitted light typically having lower energy (i.e., longer wavelength) than absorbed light, thereby altering the spectral characteristics of the light [@johnsen2011]. Although fluorophores cannot add more energy to the system, they can add more photons, potentially enhancing the *brightness* of an organism's surface [@mazel2004; @montgomerie2006]. While debate remains about the visual role of biofluorescence [@iriel2010; @marshall2017; @mazel2017], some studies suggest it may enhance the intensity of visual signals, potentially influencing mate choice [@arnold2002; @mazel2004; @lim2007] and the settlement of planktonic larvae in marine benthic organisms [@matsumura2014]. 
+
+Chitons are marine benthic mollusks 
+
+These multi-shelled marine mollusks have a remarkable sensitivity to light and function as a cohesive sensory unit [@crozier1918; @arey1919; @crozier1920; @boyle1972; @liu2022].
+
+
+Red algae are easily recognized by their reddish hue, which primarily results from accessory pigments known as phycobilins [@lee2018]. These phycobiliproteins are highly fluorescent components of light-harvesting photosynthetic antenna complexes [@glazer1994]. Studies on larval settlement have shown that the optical properties of substrates play an important role in the recruitment of photosensitive larvae from numerous benthic invertebrates species [REF]. Evidence suggests that red-colored substrates and substrate brightness positively influence habitat selection of planktonic larvae [@satheesh2010; @mason2011; @ells2016]. In boulder habitats, red crust algae typically growth around the edge of boulders [@liversage2016], serving as both food source and settlement substrate [@steneck1982a; @littler1995; @figueiredo1997; @roberts2010; @ritson-williams2014]. Chitons species, in particular, are closely associated with these algae, relying on coralline crustose as a primary food source and larval settling surface [@barnes1973; @rumrill1983; @piercy1987; @camus2012]. These multi-shelled marine mollusks have a remarkable sensitivity to light and function as a cohesive sensory unit [@crozier1918; @arey1919; @crozier1920; @boyle1972; @liu2022]. Their shells are equipped with a range of sensory receptors, and some species even possess specialized 'shell eyes' capable of image formation and polarization vision [@speiser2011; @li2015; @chappell2023]. Boulder chitons species can fully utilize the three-dimensional structure of their boulder habitat [@liversage2017a], influenced by both tidal and non-tidal rhythms, including the light-dark cycle, tidal regime, seasonal changes, weather, temperature fluctuations, habitat features, food availability, and species interactions [@glynn1970; @kangas1984; @yoshioka2006; @ng2006]. These factors lead to variations in behavior across species and habitats [@cretchley1997]. Boulder chitons often rest underneath boulders in daylight and crawl on the vertical sides at dawn or nighttime [@langer1978]. During this time, they use their iron-mineralized radula to scrape food from substrates, ingesting a variety of organisms and sediment particles [@fulton1975; @joester2016]. Research on the spatial distribution of boulder chiton species has largely focused on the upper and lower surfaces of boulders, overlooking the sides [@evans1951; @kangas1984; @smith1997; @grayson2004; @mcclintock2007; @chapman2012; @liversage2017a]. The chiton *Ischnoplax pectinata* (G. B. Sowerby II, 1840) is an ecologically understudied species that exhibits fluorescence on its shell [@grimaldi2023]. This has led to the hypothesis that individuals may be more commonly found in boulders with higher fluorescent coverage along the sides, which could provide both a food source and a visual *background* for camouflage against visually guided predators. 
+
+In this study, we investigate whether the coverage of fluorescent substrates, specifically crustose red algae, on the  sides of boulders influences the spatial distribution of the biofluorescent chiton *I. pectinata*. Our hypotheses are: 1) boulders with a higher percentage of fluorescent substrate coverage on their side surfaces will have a greater abundance of chitons, and 2) this relationship is not influenced by a species-specific effect of the crustose red algae. 
+
+
+
+
+
+
+
+
+
+Living being are intrinsically integrated with their environment [@maturana1987]. They are continuously immersed in physical and chemical properties, which we can observe as cues and signals that they used as source of information to establish ecological relationships and adapt to a changing world [@stevens2013; @delhey2017]. These processes are primarily mediated by the sensory system, which defines the boundaries of the organism's *sensory environments* [@krapp2008] and, ultimately, the boundaries of their *ecological niche* [@jaeger1978]. At a finer scale, factors like resource availability, reproductive needs, competition, predation risk, and disturbance regime may act as filters, favoring behaviors that allow individuals to select high-quality habitats for survival and reproduction [@kimirei2013; @majoris2018 @hyman2024]. These patterns of *habitat use* defines, at broader scales, the crucial areas for the population's long-term survival and reproduction, leading to spatial-temporal heterogeneity observed at the community level [@rosenzweig1987; @deangelis2014; @leibold2018]. In patchy landscapes such as boulder reefs, habitat specialists species may choose habitats that maximize their fitness [@price2010; @rimmer2021]. Thus, *boulder dwellers* are notably influenced by their ability to use sensory cues, for example, to assess *habitat quality* during larval settlement and spatial distribution [@silen1972; @svane1995; @sumner-rooney2020]. Studies on larval settlement have shown that the optical properties of substrates play an important role in the recruitment of photosensitive larvae from numerous benthic invertebrates species [REF]. Evidence suggests that red-colored substrates and substrate brightness positively influence habitat selection of planktonic larvae [@satheesh2010; @mason2011; @ells2016]. 
+
+
+
+
+
+
+
+Thus the sensory sytensm? environment influences individual fitness in various ways, affecting the search for feeding, shelter, mates, and migrations [@kingsford2002; @yamamoto2023; @escalona2023; @cooper2023].
+
+
+
+
+Boulder reefs (as known boulder fields) are a unstable hard substrata relied on consolidate solid and soft bottoms from the sea floor nearshore and in the littoral zone. 
+
+A "bowlder" is a grade term for clastic sediments in geology. For English-speaking countries they represent a large rock regularly or irregularly shaped by water or the weather, rounded and smoothed by transportation
+
+devido a 
+which has been shaped a rounde and smooted  rounded and smoothed masses of rock larger than cobbles' resulting from abrasion in transportation.  [@wentworth1922]
+
+is a rounded rock fragment, regularly or irregularly shaped, greater than 256 mm [@wentworth1922], and notably prone to rolling when subjected to physical disturbance [@sousa1979]. These disturbances can include wave action [@sousa1979a], currents and storms [@li2023], or human activities like seafood harvesting [@stagnol2013]. The rate at which boulder overturns depends on factors such size, mass, shape, burial, orientation, and location [@mcguinness1987a; @lorang2000; @goto2010; @gomez-pazo2021]. Additionally, boulders frequently experience microscale disturbance from wave-borne projectiles (e.g. logs, driftwood, pebbles, cobbles and even other boulders) and sand abrasion [@daly1977; @shanks1986]. As a result, 
+são boulder reefs are highly dynamic, patchy, and unstable marine systems, forming a mosaic of patches at various stages of community development [@osman1977; @sousa1984; @mcguinness1986].
+
+
+
+In this context it is important to reinforce that these systems can be either biogenic (such as coral or algal reefs) or geogenic origin (such as rocky, boulder reefs). In a physiognomic perspective, boulder reefs are hard compact substrata on solid and soft bottoms, which rise from the sea floor nearshore and in the littoral zone.
+
+
+====
+
+
+
+
+Many shallow-water marine organisms are sensitive to light in at least one phase of their life cycle [@cronin2017; @marshall2017c]. Light plays a central role in numerous biological processes, including biological rhythms, photosynthesis, photoperiodism, phototaxis, and vision [@bjorn2015; @bhadra2017; @brelsford2019]. Ecologically, light influences energy flow within ecosystems, affecting productivity, species distribution, and ecological interactions [@floder2002; @cohen2002; @thrane2014]. It also acts as a selective pressure, driving evolutionary changes in behaviors, physiology, and morphology, such as pigmentation [@lahti2016], photoreception and the development of optical structures [@nilsson2013; @randel2016]. In this way, light has profoundly shaped the evolutionary history of life on Earth [@rapf2016; @beckstead2016]. The interaction of light and matter determines its availability and how effectively it can be utilized by living organisms. For instance, the amount of sunlight that reaches the forest floor is influenced by factors like sun position, leaf area per unit ground area and optical properties of both the leaves and the soil [@bolibok2013]. Similarly, the quality of light reaching visual pigments depends on the *optical properties* of  pre-retinal media (i.e. the cornea, lens, and aqueous and vitreous humors), as  well as specialized structures such as oil droplets and *tapeta* [@cronin2014]. 
+
 
 Red algae are easily recognized by their reddish hue, which primarily results from accessory pigments known as phycobilins [@lee2018]. These phycobiliproteins are highly fluorescent components of light-harvesting photosynthetic antenna complexes [@glazer1994]. Studies on larval settlement have shown that the optical properties of substrates play an important role in the recruitment of photosensitive larvae from numerous benthic invertebrates species [REF]. Evidence suggests that red-colored substrates and substrate brightness positively influence habitat selection of planktonic larvae [@satheesh2010; @mason2011; @ells2016]. In boulder habitats, red crust algae typically growth around the edge of boulders [@liversage2016], serving as both food source and settlement substrate [@steneck1982a; @littler1995; @figueiredo1997; @roberts2010; @ritson-williams2014]. Chitons species, in particular, are closely associated with these algae, relying on coralline crustose as a primary food source and larval settling surface [@barnes1973; @rumrill1983; @piercy1987; @camus2012]. These multi-shelled marine mollusks have a remarkable sensitivity to light and function as a cohesive sensory unit [@crozier1918; @arey1919; @crozier1920; @boyle1972; @liu2022]. Their shells are equipped with a range of sensory receptors, and some species even possess specialized 'shell eyes' capable of image formation and polarization vision [@speiser2011; @li2015; @chappell2023]. Boulder chitons species can fully utilize the three-dimensional structure of their boulder habitat [@liversage2017a], influenced by both tidal and non-tidal rhythms, including the light-dark cycle, tidal regime, seasonal changes, weather, temperature fluctuations, habitat features, food availability, and species interactions [@glynn1970; @kangas1984; @yoshioka2006; @ng2006]. These factors lead to variations in behavior across species and habitats [@cretchley1997]. Boulder chitons often rest underneath boulders in daylight and crawl on the vertical sides at dawn or nighttime [@langer1978]. During this time, they use their iron-mineralized radula to scrape food from substrates, ingesting a variety of organisms and sediment particles [@fulton1975; @joester2016]. Research on the spatial distribution of boulder chiton species has largely focused on the upper and lower surfaces of boulders, overlooking the sides [@evans1951; @kangas1984; @smith1997; @grayson2004; @mcclintock2007; @chapman2012; @liversage2017a]. The chiton *Ischnoplax pectinata* (G. B. Sowerby II, 1840) is an ecologically understudied species that exhibits fluorescence on its shell [@grimaldi2023]. This has led to the hypothesis that individuals may be more commonly found in boulders with higher fluorescent coverage along the sides, which could provide both a food source and a visual *background* for camouflage against visually guided predators. 
 
@@ -74,6 +131,34 @@ According to IPPC Sixth Assessment Report, it is almost certain ("*high confiden
 
 Boulder reefs are highly complex, unstable and meta-dynamic habitats*[^5]. Understanding the dynamics of ecological relationships that are established in these environments is crucial for a better understanding of future scenarios of global change. In this study, we investigated a biofluorescent chiton species and its relationship with substrate coverage on the sides of its boulder habitats. We find a direct relationship between its abundance and the coverage of fluorescent substrates and bryozoans. This highlights the importance of examining the side of boulders in the ecological studies of boulder chitons. Additionally, we explore the possibility that the chiton-red crust algae association might extend beyond a purely trophic relationship, involving visual aspects enhanced by fluorescence.
 
+# Significance statement (if applicable)
+
+# Data Availability
+
+# **Conflict of interest statement**
+
+All authors declare no competing interests.
+
+# **Ethics statement (if applicable)**
+
+This study was exempted by the Animal Use Ethic Committee of Federal University of Santa Catarina in accordance with Brazilian federal legislation (n°11.794, October 8, 2008). The field site is publicly accessible, and no additional licenses were required.
+
+# **Funding statement (if applicable)**
+
+This work was supported by funding from the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES) through a doctorate scholarship (88887497855202000).
+
+# Acknowledgements (if applicable)
+
+# Teaser Text
+
+# Author Contributions
+
+# Supporting Information
+
+# *References*
+<div id="refs"></div>
+
+# *Figures and tables with captions.*
 
 # **Glossary**
 
@@ -291,31 +376,6 @@ of its detection [enc.an.mod]
 + **signal.** Any act or structure that influences the behavior of other organisms (receivers), and which evolved, via selection, specifically because of that effect [modified @stevens2013]. 
 
 + **tapeta.** *to be defined*
-
-
-# Significance statement (if applicable)
-
-# Data archiving statement
-
-# **Conflict of interest statement**
-
-All authors declare no competing interests.
-
-# **Ethics statement (if applicable)**
-
-This study was exempted by the Animal Use Ethic Committee of Federal University of Santa Catarina in accordance with Brazilian federal legislation (n°11.794, October 8, 2008). The field site is publicly accessible, and no additional licenses were required.
-
-# **Funding statement (if applicable)**
-
-This work was supported by funding from the Coordenação de Aperfeiçoamento de Pessoal de Nível Superior (CAPES) through a doctorate scholarship (88887497855202000).
-
-
-# Acknowledgements (if applicable)
-
-# *References*
-<div id="refs"></div>
-
-# *Figures and tables with captions.*
 
 # Commits
 
